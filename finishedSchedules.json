@@ -1,0 +1,19 @@
+[
+  {
+    "type": "poll",
+    "group_name": "Cairo",
+    "question": "what we will eat today",
+    "options": [
+      "chicken",
+      "meat",
+      "koshary"
+    ],
+    "allow_multiple": false,
+    "scheduled_time": "2025-10-29 16:15",
+    "repeat": "once",
+    "created_at": "2025-10-29 16:14:27",
+    "status": "done",
+    "completed_at": "2025-10-29 16:16:54",
+    "time": "2025-10-29 16:15"
+  }
+]

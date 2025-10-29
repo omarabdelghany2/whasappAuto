@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+selenium = "==4.15.2"
+webdriver-manager = "==4.0.1"
+schedule = "==1.2.0"
+python-dotenv = "==1.0.0"
+fastapi = "==0.115.0"
+uvicorn = {extras = ["standard"], version = "==0.30.6"}
+python-multipart = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3"

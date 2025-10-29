@@ -1,0 +1,152 @@
+WhatsApp Scheduler API - Documentation
+=====================================
+
+Overview
+--------
+This service automates sending WhatsApp messages, images (with optional caption), and polls to a group via WhatsApp Web using Selenium. It exposes an HTTP API (FastAPI) and a background scheduler for one-time and recurring jobs.
+
+Components
+----------
+- whatsapp_bot.py: Selenium automation for WhatsApp Web
+- scheduler.py: Job scheduling (text, image, poll) and background loop
+- server.py: FastAPI server exposing endpoints
+- schedules.json: Persisted schedules that can be reloaded
+
+Requirements
+------------
+- Python 3.9+
+- Google Chrome installed
+- First run will require scanning the WhatsApp Web QR code
+
+Install and Run
+---------------
+1) Install dependencies:
+   pip install -r requirements.txt
+
+2) Start the API server:
+   uvicorn server:app --reload
+
+   - On startup the server will:
+     - NOT launch Chrome or WhatsApp Web
+     - Load schedules from schedules.json if present (no execution yet)
+     - Wait for you to call /scheduler/start to launch WhatsApp and begin executing
+
+Data model (schedules.json)
+---------------------------
+Each entry is one of three types.
+
+1) Text message (type defaults to "message")
+{
+  "type": "message",
+  "group_name": "Cairo",
+  "message": "Good morning!",
+  "time": "2025-10-30 09:00",
+  "repeat": "once" | "daily" | "hourly" | "monday".."sunday"
+}
+
+2) Image with caption
+{
+  "type": "image",
+  "group_name": "Cairo",
+  "image_path": "/abs/path/to/image.jpg",
+  "caption": "optional text",
+  "time": "2025-10-30 09:15",
+  "repeat": "once" | "daily" | "hourly" | "monday".."sunday"
+}
+
+3) Poll
+{
+  "type": "poll",
+  "group_name": "Cairo",
+  "question": "What's your favorite food?",
+  "options": ["Pizza", "Burger", "Pasta"],
+  "allow_multiple": false,
+  "time": "2025-10-30 12:00",
+  "repeat": "once" | "daily" | "hourly" | "monday".."sunday"
+}
+
+Time formats
+------------
+- One-time:  "YYYY-MM-DD HH:MM" or "YYYY-MM-DD HH:MM:SS"
+- Recurring: Same field is accepted; for repeating jobs only the time-of-day portion is used.
+- Past one-time datetimes are skipped (with a warning).
+
+API Endpoints
+-------------
+Base URL: http://127.0.0.1:8000
+Content-Type for POST: application/json
+
+Immediate send
+  (Removed) This API is scheduling-only.
+
+Schedule new jobs
+  Use a single endpoint to clear and load schedules from a provided list of events, or from schedules.json if no body is provided.
+
+Scheduler management
+- GET /schedules
+  Returns in-memory list of scheduled entries.
+
+- POST /schedules/save
+  Persists current in-memory schedules to schedules.json.
+
+- POST /schedules/load
+  Single reload endpoint. Always clears and loads:
+  • If body includes entries, replace with those and save to schedules.json.
+  • If no body provided, load from schedules.json.
+
+  Request body (optional):
+  { "entries": [ <entries as described in Data model> ] }
+
+  Examples:
+  1) Reload from file:
+     curl -X POST http://127.0.0.1:8000/schedules/load
+
+  2) Replace with provided entries and save:
+     curl -X POST http://127.0.0.1:8000/schedules/load \
+       -H "Content-Type: application/json" \
+       -d '{
+             "entries": [
+               {"type":"message","group_name":"Cairo","message":"One-time","time":"2025-10-30 09:00","repeat":"once"},
+               {"type":"poll","group_name":"Cairo","question":"Pick","options":["A","B"],"allow_multiple":false,"time":"2025-10-30 12:00","repeat":"once"}
+             ]
+           }'
+
+Scheduler control
+- GET /scheduler/status
+  Returns: { "running": bool, "count": number }
+  Example:
+  curl http://127.0.0.1:8000/scheduler/status
+
+- POST /scheduler/start
+  Starts the background scheduler loop only. WhatsApp will be launched lazily when the first due job executes.
+  Example:
+  curl -X POST http://127.0.0.1:8000/scheduler/start
+
+- POST /scheduler/stop
+  Stops the background scheduler loop (jobs remain loaded; no execution until restarted)
+  Example:
+  curl -X POST http://127.0.0.1:8000/scheduler/stop
+
+Behavior and Notes
+------------------
+- The server maintains a single Chrome session. Keep it running for scheduling to work.
+- On first run, scan the QR code. Subsequent runs reuse the Chrome profile at ./chrome_data.
+- Scheduler runs in a background thread; jobs execute even while API is serving.
+- Image paths must be absolute and point to existing files.
+- Poll options must have 2..12 items. allow_multiple toggles single vs multi answer.
+- For repeating jobs with a datetime value, only the time-of-day is used.
+- If WhatsApp Web layout changes, some selectors may need updating.
+
+Troubleshooting
+---------------
+- If Chrome/driver issues occur, the bot attempts a fallback to system Chrome.
+- If a job fails to send, check whatsapp_bot.log and server logs for details.
+- If schedules.json has invalid JSON, /schedules/load without body will log an error.
+
+Security Considerations
+-----------------------
+- This API is local and unauthenticated by default. If exposing beyond localhost, add authentication and TLS (reverse proxy or FastAPI middleware).
+
+Versioning
+----------
+- Endpoints and fields may evolve. Keep this doc aligned with server.py and scheduler.py.
