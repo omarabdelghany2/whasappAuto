@@ -26,7 +26,7 @@ class MessageScheduler:
         self._stop_event = threading.Event()
         self.finished_schedules_file = 'finishedSchedules.json'
 
-    def schedule_message(self, group_name: str, message: str, scheduled_time: str, repeat: str = "once"):
+    def schedule_message(self, group_name: str, message: str, scheduled_time: str, repeat: str = "once", profile_name: str = None):
         """
         Schedule a message to be sent
 
@@ -35,6 +35,7 @@ class MessageScheduler:
             message (str): Message to send
             scheduled_time (str): Time to send message (format: "HH:MM" for time, or "2023-12-25 14:30" for specific date)
             repeat (str): Repeat frequency ("once", "daily", "hourly", or specific day like "monday")
+            profile_name (str): Chrome profile name to use (optional)
         """
         entry = {
             "group_name": group_name,
@@ -43,14 +44,15 @@ class MessageScheduler:
             "repeat": repeat,
             "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "type": "message",
-            "status": "pending"
+            "status": "pending",
+            "profile_name": profile_name
         }
 
         self.scheduled_messages.append(entry)
 
         # Create the job
         def job():
-            self._ensure_bot_ready()
+            self._ensure_bot_ready(profile_name)
             logger.info(f"Executing scheduled message to '{group_name}'")
             success = self.bot.send_message_to_group(group_name, message)
             if success:
@@ -89,7 +91,7 @@ class MessageScheduler:
 
         logger.info(f"Message scheduled: {group_name} at {scheduled_time} ({repeat})")
 
-    def schedule_image(self, group_name: str, image_path: str, caption: Optional[str], scheduled_time: str, repeat: str = "once"):
+    def schedule_image(self, group_name: str, image_path: str, caption: Optional[str], scheduled_time: str, repeat: str = "once", profile_name: str = None):
         """Schedule an image to be sent."""
         entry = {
             "type": "image",
@@ -99,12 +101,13 @@ class MessageScheduler:
             "scheduled_time": scheduled_time,
             "repeat": repeat,
             "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "status": "pending"
+            "status": "pending",
+            "profile_name": profile_name
         }
         self.scheduled_messages.append(entry)
 
         def job():
-            self._ensure_bot_ready()
+            self._ensure_bot_ready(profile_name)
             logger.info(f"Executing scheduled image to '{group_name}'")
             success = self.bot.send_image_to_group(group_name, image_path, caption)
             if success:
@@ -140,7 +143,7 @@ class MessageScheduler:
         self._schedule_by_repeat(job, repeat, scheduled_time)
         logger.info(f"Image scheduled: {group_name} at {scheduled_time} ({repeat})")
 
-    def schedule_poll(self, group_name: str, question: str, options: List[str], allow_multiple: bool, scheduled_time: str, repeat: str = "once"):
+    def schedule_poll(self, group_name: str, question: str, options: List[str], allow_multiple: bool, scheduled_time: str, repeat: str = "once", profile_name: str = None):
         """Schedule a poll to be sent."""
         entry = {
             "type": "poll",
@@ -151,12 +154,13 @@ class MessageScheduler:
             "scheduled_time": scheduled_time,
             "repeat": repeat,
             "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "status": "pending"
+            "status": "pending",
+            "profile_name": profile_name
         }
         self.scheduled_messages.append(entry)
 
         def job():
-            self._ensure_bot_ready()
+            self._ensure_bot_ready(profile_name)
             logger.info(f"Executing scheduled poll to '{group_name}'")
             success = self.bot.send_poll_to_group(group_name, question, options, allow_multiple)
             if success:
@@ -287,13 +291,15 @@ class MessageScheduler:
 
             for schedule_data in schedules:
                 typ = schedule_data.get("type", "message")
+                profile_name = schedule_data.get("profile_name")
                 if typ == "image":
                     self.schedule_image(
                         group_name=schedule_data.get("group_name"),
                         image_path=schedule_data.get("image_path"),
                         caption=schedule_data.get("caption"),
                         scheduled_time=schedule_data.get("time") or schedule_data.get("scheduled_time"),
-                        repeat=schedule_data.get("repeat", "once")
+                        repeat=schedule_data.get("repeat", "once"),
+                        profile_name=profile_name
                     )
                 elif typ == "poll":
                     self.schedule_poll(
@@ -302,14 +308,16 @@ class MessageScheduler:
                         options=schedule_data.get("options", []),
                         allow_multiple=bool(schedule_data.get("allow_multiple", False)),
                         scheduled_time=schedule_data.get("time") or schedule_data.get("scheduled_time"),
-                        repeat=schedule_data.get("repeat", "once")
+                        repeat=schedule_data.get("repeat", "once"),
+                        profile_name=profile_name
                     )
                 else:
                     self.schedule_message(
                         group_name=schedule_data.get("group_name"),
                         message=schedule_data.get("message"),
                         scheduled_time=schedule_data.get("time") or schedule_data.get("scheduled_time"),
-                        repeat=schedule_data.get("repeat", "once")
+                        repeat=schedule_data.get("repeat", "once"),
+                        profile_name=profile_name
                     )
 
             logger.info(f"Loaded {len(schedules)} scheduled messages from {file_path}")
@@ -537,8 +545,13 @@ class MessageScheduler:
         """Return True if the scheduler background thread is running."""
         return bool(self._thread and self._thread.is_alive() and not self._stop_event.is_set())
 
-    def _ensure_bot_ready(self):
-        """Start WhatsApp bot lazily if needed before executing a job."""
+    def _ensure_bot_ready(self, profile_name: str = None):
+        """
+        Start WhatsApp bot lazily if needed before executing a job.
+
+        Args:
+            profile_name (str): Chrome profile name to use (optional)
+        """
         try:
             if self.bot is None:
                 raise RuntimeError("Bot not initialized")
@@ -552,8 +565,21 @@ class MessageScheduler:
                 except Exception:
                     needs_start = True
             if needs_start:
+                # Get the profile path from chrome_profiles module
+                profile_path = None
+                if profile_name:
+                    from chrome_profiles import list_chrome_profiles
+                    profiles = list_chrome_profiles()
+                    for profile in profiles:
+                        if profile.get('name') == profile_name:
+                            profile_path = profile.get('path')
+                            logger.info(f"Using Chrome profile '{profile_name}' at: {profile_path}")
+                            break
+                    if not profile_path:
+                        logger.warning(f"Chrome profile '{profile_name}' not found, using default")
+
                 logger.info("Starting WhatsApp bot for scheduled job...")
-                self.bot.start()
+                self.bot.start(profile_path=profile_path)
                 self.bot.wait_for_whatsapp_load(timeout=180)
         except Exception as e:
             logger.error(f"Failed to prepare WhatsApp bot: {e}")

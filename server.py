@@ -11,6 +11,7 @@ from pathlib import Path
 
 from whatsapp_bot import WhatsAppBot
 from scheduler import MessageScheduler
+from chrome_profiles import list_chrome_profiles
 
 logger = logging.getLogger(__name__)
 
@@ -228,6 +229,19 @@ def clear_all_finished_schedules():
     except Exception as e:
         logger.error(f"Error clearing finished schedules: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error clearing finished schedules: {str(e)}")
+
+
+@app.get("/chrome-profiles")
+def get_chrome_profiles():
+    """
+    Get list of available Chrome profiles on the system
+    """
+    try:
+        profiles = list_chrome_profiles()
+        return profiles
+    except Exception as e:
+        logger.error(f"Error getting Chrome profiles: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting Chrome profiles: {str(e)}")
 
 
 # For local running: uvicorn server:app --reload

@@ -33,14 +33,22 @@ class WhatsAppBot:
         """
         self.driver = None
         self.headless = headless
-        self.wait_time = 30
+        self.wait_time = 10  # Reduced from 30 for faster operations
 
-    def start(self):
-        """Start the browser and open WhatsApp Web"""
+    def start(self, profile_path: str = None):
+        """
+        Start the browser and open WhatsApp Web
+
+        Args:
+            profile_path (str): Path to Chrome profile directory (optional)
+        """
         logger.info("Starting WhatsApp bot...")
 
         options = webdriver.ChromeOptions()
-        options.add_argument("--user-data-dir=./chrome_data")
+        # Use custom profile if provided, otherwise use default ./chrome_data
+        user_data_dir = profile_path if profile_path else "./chrome_data"
+        options.add_argument(f"--user-data-dir={user_data_dir}")
+        logger.info(f"Using Chrome profile: {user_data_dir}")
         options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
         options.add_experimental_option('useAutomationExtension', False)
@@ -108,6 +116,8 @@ class WhatsAppBot:
         Args:
             group_name (str): Name of the group to search for
         """
+        # Strip whitespace to handle trailing/leading spaces
+        group_name = group_name.strip()
         logger.info(f"Searching for group: {group_name}")
 
         try:
@@ -118,20 +128,41 @@ class WhatsAppBot:
 
             # Click and clear the search box
             search_box.click()
-            time.sleep(1)
+            time.sleep(0.3)  # Reduced from 1s
             search_box.clear()
 
             # Type the group name
             search_box.send_keys(group_name)
-            time.sleep(2)
 
-            # Click on the first result
+            # Wait for search results to appear (smarter than fixed sleep)
+            time.sleep(0.5)  # Reduced from 2s
+
+            # Click on the first result - Try exact match first
             logger.info(f"Clicking on group: {group_name}")
-            group_element = WebDriverWait(self.driver, self.wait_time).until(
-                EC.presence_of_element_located((By.XPATH, f'//span[@title="{group_name}"]'))
-            )
+            group_element = None
+
+            try:
+                # Method 1: Exact match (fastest)
+                group_element = WebDriverWait(self.driver, 3).until(
+                    EC.element_to_be_clickable((By.XPATH, f'//span[@title="{group_name}"]'))
+                )
+                logger.info("Found group with exact match")
+            except TimeoutException:
+                # Method 2: Case-insensitive match (fallback)
+                try:
+                    group_element = WebDriverWait(self.driver, 2).until(
+                        EC.element_to_be_clickable((By.XPATH, f'//span[contains(translate(@title, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "{group_name.lower()}")]'))
+                    )
+                    logger.info("Found group with case-insensitive match")
+                except TimeoutException:
+                    # Method 3: Partial match (last resort)
+                    group_element = WebDriverWait(self.driver, 2).until(
+                        EC.element_to_be_clickable((By.XPATH, f'//span[contains(@title, "{group_name}")]'))
+                    )
+                    logger.info("Found group with partial match")
+
             group_element.click()
-            time.sleep(2)
+            time.sleep(0.5)  # Reduced from 2s
 
             logger.info(f"Successfully opened group: {group_name}")
             return True
@@ -149,6 +180,7 @@ class WhatsAppBot:
         """
         logger.info(f"Sending message: {message[:50]}...")
         if group_name:
+            group_name = group_name.strip()
             logger.info(f"Navigating to group for message: {group_name}")
             if not self.search_group(group_name):
                 logger.error(f"Cannot open group '{group_name}' to send message")
@@ -162,7 +194,7 @@ class WhatsAppBot:
 
             # Click on the message box
             message_box.click()
-            time.sleep(1)
+            time.sleep(0.3)  # Reduced from 1s
 
             # Type the message (handle multi-line messages)
             lines = message.split('\n')
@@ -172,13 +204,13 @@ class WhatsAppBot:
                     # Send Shift+Enter for new line
                     message_box.send_keys(Keys.SHIFT + Keys.ENTER)
 
-            time.sleep(1)
+            time.sleep(0.3)  # Reduced from 1s
 
             # Send the message - Try multiple methods
             try:
                 # Method 1: Press Enter key
                 message_box.send_keys(Keys.ENTER)
-                time.sleep(1)
+                time.sleep(0.5)  # Reduced from 1s
             except:
                 pass
 
@@ -196,7 +228,9 @@ class WhatsAppBot:
                 except:
                     logger.info("Message sent using Enter key!")
 
-            time.sleep(2)
+            # Wait 5 seconds to verify message was sent
+            logger.info("Waiting 5 seconds to verify message was sent...")
+            time.sleep(5)
             return True
 
         except (TimeoutException, NoSuchElementException) as e:
@@ -215,6 +249,7 @@ class WhatsAppBot:
 
         logger.info(f"Sending image: {image_path}")
         if group_name:
+            group_name = group_name.strip()
             logger.info(f"Navigating to group for image: {group_name}")
             if not self.search_group(group_name):
                 logger.error(f"Cannot open group '{group_name}' to send image")
@@ -243,13 +278,13 @@ class WhatsAppBot:
             attach_clicked = False
             for selector in attach_selectors:
                 try:
-                    attach_button = WebDriverWait(self.driver, 5).until(
+                    attach_button = WebDriverWait(self.driver, 2).until(  # Reduced from 5s
                         EC.element_to_be_clickable((By.XPATH, selector))
                     )
                     attach_button.click()
                     logger.info(f"Clicked attach button with selector: {selector}")
                     attach_clicked = True
-                    time.sleep(2)
+                    time.sleep(0.8)  # Reduced from 2s
                     break
                 except Exception as e:
                     logger.debug(f"Attach selector {selector} failed: {str(e)}")
@@ -270,7 +305,7 @@ class WhatsAppBot:
             file_uploaded = False
             for selector in input_selectors:
                 try:
-                    file_input = WebDriverWait(self.driver, 10).until(
+                    file_input = WebDriverWait(self.driver, 5).until(  # Reduced from 10s
                         EC.presence_of_element_located((By.XPATH, selector))
                     )
                     logger.info(f"Found file input with selector: {selector}")
@@ -280,9 +315,9 @@ class WhatsAppBot:
                     logger.info(f"Image file path sent: {absolute_path}")
                     file_uploaded = True
 
-                    # Wait longer for preview window to appear
+                    # Wait for preview window to appear
                     logger.info("Waiting for preview window to appear...")
-                    time.sleep(5)
+                    time.sleep(1)  # Reduced from 5s -> 2s -> 1s
                     break
                 except Exception as e:
                     logger.debug(f"File input selector {selector} failed: {str(e)}")
@@ -311,7 +346,7 @@ class WhatsAppBot:
                     for selector in caption_selectors:
                         try:
                             # Wait for the caption box to be visible
-                            caption_box = WebDriverWait(self.driver, 5).until(
+                            caption_box = WebDriverWait(self.driver, 2).until(  # Reduced from 5s
                                 EC.visibility_of_element_located((By.XPATH, selector))
                             )
 
@@ -323,11 +358,11 @@ class WhatsAppBot:
 
                             # Click and add caption
                             caption_box.click()
-                            time.sleep(0.5)
+                            time.sleep(0.3)  # Reduced from 0.5s
                             caption_box.send_keys(caption)
                             logger.info(f"✓ Caption added successfully: {caption}")
                             caption_added = True
-                            time.sleep(1)
+                            time.sleep(0.3)  # Reduced from 1s
                             break
 
                         except Exception as e:
@@ -341,7 +376,7 @@ class WhatsAppBot:
                     logger.warning(f"Error adding caption: {str(e)}")
 
             # Click the send button
-            time.sleep(2)
+            time.sleep(0.5)  # Reduced from 2s
             send_selectors = [
                 '//span[@data-icon="send"]',
                 '//button[@aria-label="Send"]',
@@ -352,12 +387,14 @@ class WhatsAppBot:
 
             for selector in send_selectors:
                 try:
-                    send_button = WebDriverWait(self.driver, 5).until(
+                    send_button = WebDriverWait(self.driver, 2).until(  # Reduced from 5s
                         EC.element_to_be_clickable((By.XPATH, selector))
                     )
                     send_button.click()
                     logger.info(f"Image sent successfully using selector: {selector}!")
-                    time.sleep(3)
+                    # Wait for image to upload before returning (important!)
+                    logger.info("Waiting 5 seconds for image to upload...")
+                    time.sleep(5)  # Wait for upload to complete
                     return True
                 except:
                     continue
@@ -384,6 +421,7 @@ class WhatsAppBot:
         logger.info(f"Options: {options}")
         logger.info(f"Allow multiple answers: {allow_multiple_answers}")
         if group_name:
+            group_name = group_name.strip()
             logger.info(f"Navigating to group for poll: {group_name}")
             if not self.search_group(group_name):
                 logger.error(f"Cannot open group '{group_name}' to send poll")
@@ -411,13 +449,13 @@ class WhatsAppBot:
             attach_clicked = False
             for selector in attach_selectors:
                 try:
-                    attach_button = WebDriverWait(self.driver, 5).until(
+                    attach_button = WebDriverWait(self.driver, 2).until(  # Reduced from 5s
                         EC.element_to_be_clickable((By.XPATH, selector))
                     )
                     attach_button.click()
                     logger.info(f"Clicked attach button with selector: {selector}")
                     attach_clicked = True
-                    time.sleep(2)
+                    time.sleep(0.8)  # Reduced from 2s
                     break
                 except Exception as e:
                     logger.debug(f"Attach selector {selector} failed: {str(e)}")
@@ -440,13 +478,13 @@ class WhatsAppBot:
             poll_clicked = False
             for selector in poll_selectors:
                 try:
-                    poll_button = WebDriverWait(self.driver, 5).until(
+                    poll_button = WebDriverWait(self.driver, 2).until(  # Reduced from 5s
                         EC.element_to_be_clickable((By.XPATH, selector))
                     )
                     poll_button.click()
                     logger.info(f"Clicked poll button with selector: {selector}")
                     poll_clicked = True
-                    time.sleep(2)
+                    time.sleep(0.8)  # Reduced from 2s
                     break
                 except Exception as e:
                     logger.debug(f"Poll selector {selector} failed: {str(e)}")
@@ -468,15 +506,15 @@ class WhatsAppBot:
             question_entered = False
             for selector in question_selectors:
                 try:
-                    question_box = WebDriverWait(self.driver, 5).until(
+                    question_box = WebDriverWait(self.driver, 2).until(  # Reduced from 5s
                         EC.presence_of_element_located((By.XPATH, selector))
                     )
                     question_box.click()
-                    time.sleep(0.5)
+                    time.sleep(0.3)  # Reduced from 0.5s
                     question_box.send_keys(question)
                     logger.info(f"Question entered: {question}")
                     question_entered = True
-                    time.sleep(1)
+                    time.sleep(0.3)  # Reduced from 1s
                     break
                 except Exception as e:
                     logger.debug(f"Question selector {selector} failed: {str(e)}")
@@ -486,8 +524,8 @@ class WhatsAppBot:
                 logger.error("Could not enter poll question")
                 return False
 
-            # Wait a bit longer for poll form to fully load
-            time.sleep(2)
+            # Wait for poll form to fully load
+            time.sleep(0.5)  # Reduced from 2s -> 1s -> 0.5s
 
             # Enter the options
             logger.info("Entering poll options...")
@@ -594,7 +632,7 @@ class WhatsAppBot:
                 toggle_set = False
                 for selector in toggle_candidates:
                     try:
-                        el = WebDriverWait(self.driver, 3).until(
+                        el = WebDriverWait(self.driver, 2).until(  # Reduced from 3s
                             EC.presence_of_element_located((By.XPATH, selector))
                         )
 
@@ -646,7 +684,7 @@ class WhatsAppBot:
 
             # Click send button
             logger.info("Sending poll...")
-            time.sleep(2)
+            time.sleep(0.5)  # Reduced from 2s
             send_selectors = [
                 '//span[@data-icon="send"]',
                 '//button[@aria-label="Send"]',
@@ -656,12 +694,14 @@ class WhatsAppBot:
 
             for selector in send_selectors:
                 try:
-                    send_button = WebDriverWait(self.driver, 5).until(
+                    send_button = WebDriverWait(self.driver, 2).until(  # Reduced from 5s
                         EC.element_to_be_clickable((By.XPATH, selector))
                     )
                     send_button.click()
                     logger.info(f"Poll sent successfully using selector: {selector}!")
-                    time.sleep(3)
+                    # Wait 4 seconds to verify poll was sent
+                    logger.info("Waiting 4 seconds to verify poll was sent...")
+                    time.sleep(4)
                     return True
                 except Exception as e:
                     logger.debug(f"Send selector {selector} failed: {str(e)}")
@@ -684,6 +724,7 @@ class WhatsAppBot:
             group_name (str): Name of the group
             message (str): Message to send
         """
+        group_name = group_name.strip()
         logger.info(f"Sending message to group '{group_name}'")
 
         if self.search_group(group_name):
@@ -701,6 +742,7 @@ class WhatsAppBot:
             image_path (str): Path to the image file
             caption (str): Optional caption for the image
         """
+        group_name = group_name.strip()
         logger.info(f"Sending image to group '{group_name}'")
 
         if self.search_group(group_name):
@@ -719,6 +761,7 @@ class WhatsAppBot:
             options (list): List of option strings
             allow_multiple_answers (bool): Allow users to select multiple answers
         """
+        group_name = group_name.strip()
         logger.info(f"Sending poll to group '{group_name}'")
 
         if self.search_group(group_name):
