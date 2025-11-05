@@ -72,5 +72,220 @@
     "profile_name": null,
     "completed_at": "2025-11-04 22:55:11",
     "time": "2025-11-04 22:54"
+  },
+  {
+    "group_name": "cairo",
+    "message": "sba7o argallaa",
+    "scheduled_time": "2025-11-05 12:18",
+    "repeat": "once",
+    "created_at": "2025-11-05 12:17:11",
+    "type": "message",
+    "status": "done",
+    "profile_name": null,
+    "completed_at": "2025-11-05 12:18:51",
+    "time": "2025-11-05 12:18"
+  },
+  {
+    "type": "poll",
+    "group_name": "Omar abdelghany",
+    "question": "how are you guys at double view ?",
+    "options": [
+      "want to kick abo gabl ass",
+      "hungry",
+      "fine"
+    ],
+    "allow_multiple": true,
+    "scheduled_time": "2025-11-05 12:51",
+    "repeat": "once",
+    "created_at": "2025-11-05 12:51:23",
+    "status": "done",
+    "profile_name": null,
+    "completed_at": "2025-11-05 12:52:38",
+    "time": "2025-11-05 12:51"
+  },
+  {
+    "type": "poll",
+    "group_name": "cairo",
+    "question": "how are you guys at double view ?",
+    "options": [
+      "want to kick abo gabl ass",
+      "hungry",
+      "fine"
+    ],
+    "allow_multiple": true,
+    "scheduled_time": "2025-11-05 12:53",
+    "repeat": "once",
+    "created_at": "2025-11-05 12:51:23",
+    "status": "done",
+    "profile_name": null,
+    "completed_at": "2025-11-05 12:54:36",
+    "time": "2025-11-05 12:53"
+  },
+  {
+    "type": "poll",
+    "group_name": "yousef khalifa",
+    "question": "what are you drinking Yousef ?",
+    "options": [
+      "water",
+      "juice",
+      "tea",
+      "coffee"
+    ],
+    "allow_multiple": false,
+    "scheduled_time": "2025-11-05 13:00",
+    "repeat": "once",
+    "created_at": "2025-11-05 13:00:44",
+    "status": "done",
+    "profile_name": null,
+    "completed_at": "2025-11-05 13:02:00",
+    "time": "2025-11-05 13:00"
+  },
+  {
+    "type": "poll",
+    "group_name": "Omar abdelghany",
+    "question": "what are you drinking Yousef ?",
+    "options": [
+      "water",
+      "juice",
+      "tea",
+      "coffee"
+    ],
+    "allow_multiple": false,
+    "scheduled_time": "2025-11-05 13:02",
+    "repeat": "once",
+    "created_at": "2025-11-05 13:00:44",
+    "status": "done",
+    "profile_name": null,
+    "completed_at": "2025-11-05 13:03:59",
+    "time": "2025-11-05 13:02"
+  },
+  {
+    "type": "poll",
+    "group_name": "yousef khalifa",
+    "question": "are you stasified in this office ya Joe ?",
+    "options": [
+      "yes",
+      "no",
+      "I want to kick them"
+    ],
+    "allow_multiple": false,
+    "scheduled_time": "2025-11-05 13:33",
+    "repeat": "once",
+    "created_at": "2025-11-05 13:33:37",
+    "status": "done",
+    "profile_name": null,
+    "batch_id": "batch_1762342417711",
+    "completed_at": "2025-11-05 13:34:54",
+    "time": "2025-11-05 13:33"
+  },
+  {
+    "type": "poll",
+    "group_name": "Omar abdelghany",
+    "question": "are you stasified in this office ya Joe ?",
+    "options": [
+      "yes",
+      "no",
+      "I want to kick them"
+    ],
+    "allow_multiple": false,
+    "scheduled_time": "2025-11-05 13:35",
+    "repeat": "once",
+    "created_at": "2025-11-05 13:33:37",
+    "status": "done",
+    "profile_name": null,
+    "batch_id": "batch_1762342417711",
+    "completed_at": "2025-11-05 13:36:22",
+    "time": "2025-11-05 13:35"
+  },
+  {
+    "type": "poll",
+    "group_name": "yousef khalifa",
+    "question": "what will you do today ?",
+    "options": [
+      "gym",
+      "work",
+      "play",
+      "football"
+    ],
+    "allow_multiple": true,
+    "scheduled_time": "2025-11-05 13:38",
+    "repeat": "once",
+    "created_at": "2025-11-05 13:38:27",
+    "status": "done",
+    "profile_name": null,
+    "batch_id": "batch_1762342707075",
+    "completed_at": "2025-11-05 13:39:42",
+    "time": "2025-11-05 13:38"
+  },
+  {
+    "type": "poll",
+    "group_name": "Omar abdelghany",
+    "question": "what will you do today ?",
+    "options": [
+      "gym",
+      "work",
+      "play",
+      "football"
+    ],
+    "allow_multiple": true,
+    "scheduled_time": "2025-11-05 13:40",
+    "repeat": "once",
+    "created_at": "2025-11-05 13:38:27",
+    "status": "done",
+    "profile_name": null,
+    "batch_id": "batch_1762342707075",
+    "completed_at": "2025-11-05 13:41:12",
+    "time": "2025-11-05 13:40"
+  },
+  {
+    "type": "poll",
+    "group_name": "yousef khalifa",
+    "question": "how are you today jouseff",
+    "options": [
+      "am okay",
+      "am not okay",
+      "am just hungry"
+    ],
+    "allow_multiple": true,
+    "scheduled_time": "2025-11-05 13:46",
+    "repeat": "once",
+    "created_at": "2025-11-05 13:46:31",
+    "status": "done",
+    "profile_name": null,
+    "batch_id": "batch_1762343191591",
+    "completed_at": "2025-11-05 13:47:46",
+    "time": "2025-11-05 13:46"
+  },
+  {
+    "type": "poll",
+    "group_name": "Omar abdelghany",
+    "question": "how are you today jouseff",
+    "options": [
+      "am okay",
+      "am not okay",
+      "am just hungry"
+    ],
+    "allow_multiple": true,
+    "scheduled_time": "2025-11-05 13:48",
+    "repeat": "once",
+    "created_at": "2025-11-05 13:46:31",
+    "status": "done",
+    "profile_name": null,
+    "batch_id": "batch_1762343191591",
+    "completed_at": "2025-11-05 13:49:15",
+    "time": "2025-11-05 13:48"
+  },
+  {
+    "group_name": "cairo",
+    "message": "good morning",
+    "scheduled_time": "2025-11-05 13:49",
+    "repeat": "once",
+    "created_at": "2025-11-05 13:49:49",
+    "type": "message",
+    "status": "done",
+    "profile_name": null,
+    "batch_id": null,
+    "completed_at": "2025-11-05 13:50:31",
+    "time": "2025-11-05 13:49"
   }
 ]

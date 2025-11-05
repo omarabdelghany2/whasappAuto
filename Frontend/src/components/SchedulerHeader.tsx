@@ -102,6 +102,11 @@ export const SchedulerHeader = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
+            <img
+              src="/51TalkLogo.png.webp"
+              alt="51Talk Logo"
+              className="h-10 w-auto"
+            />
             <h1 className="text-2xl font-bold bg-[var(--gradient-primary)] bg-clip-text text-transparent">
               WhatsApp Scheduler
             </h1>

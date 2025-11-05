@@ -26,7 +26,7 @@ class MessageScheduler:
         self._stop_event = threading.Event()
         self.finished_schedules_file = 'finishedSchedules.json'
 
-    def schedule_message(self, group_name: str, message: str, scheduled_time: str, repeat: str = "once", profile_name: str = None):
+    def schedule_message(self, group_name: str, message: str, scheduled_time: str, repeat: str = "once", profile_name: str = None, batch_id: str = None):
         """
         Schedule a message to be sent
 
@@ -36,6 +36,7 @@ class MessageScheduler:
             scheduled_time (str): Time to send message (format: "HH:MM" for time, or "2023-12-25 14:30" for specific date)
             repeat (str): Repeat frequency ("once", "daily", "hourly", or specific day like "monday")
             profile_name (str): Chrome profile name to use (optional)
+            batch_id (str): Batch ID for multi-group schedules (optional)
         """
         entry = {
             "group_name": group_name,
@@ -45,7 +46,8 @@ class MessageScheduler:
             "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "type": "message",
             "status": "pending",
-            "profile_name": profile_name
+            "profile_name": profile_name,
+            "batch_id": batch_id
         }
 
         self.scheduled_messages.append(entry)
@@ -75,11 +77,14 @@ class MessageScheduler:
                 except Exception as e:
                     logger.warning(f"Could not mark schedule as done: {e}")
 
-                # Close browser only after successful send
+                # Close browser only if no upcoming schedules in same batch
                 try:
                     if self.bot and self.bot.driver:
-                        logger.info("Closing browser after successful scheduled job...")
-                        self.bot.close()
+                        if entry.get("batch_id") and self._has_upcoming_schedules(within_minutes=10, batch_id=entry.get("batch_id")):
+                            logger.info(f"Keeping browser open - more schedules in batch {entry.get('batch_id')} coming up soon")
+                        else:
+                            logger.info("Closing browser after successful scheduled job...")
+                            self.bot.close()
                 except Exception as e:
                     logger.warning(f"Error closing browser after scheduled job: {e}")
             else:
@@ -91,7 +96,7 @@ class MessageScheduler:
 
         logger.info(f"Message scheduled: {group_name} at {scheduled_time} ({repeat})")
 
-    def schedule_image(self, group_name: str, image_path: str, caption: Optional[str], scheduled_time: str, repeat: str = "once", profile_name: str = None):
+    def schedule_image(self, group_name: str, image_path: str, caption: Optional[str], scheduled_time: str, repeat: str = "once", profile_name: str = None, batch_id: str = None):
         """Schedule an image to be sent."""
         entry = {
             "type": "image",
@@ -102,7 +107,8 @@ class MessageScheduler:
             "repeat": repeat,
             "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "status": "pending",
-            "profile_name": profile_name
+            "profile_name": profile_name,
+            "batch_id": batch_id
         }
         self.scheduled_messages.append(entry)
 
@@ -129,11 +135,14 @@ class MessageScheduler:
                 except Exception as e:
                     logger.warning(f"Could not mark schedule as done: {e}")
 
-                # Close browser only after successful send
+                # Close browser only if no upcoming schedules
                 try:
                     if self.bot and self.bot.driver:
-                        logger.info("Closing browser after successful scheduled job...")
-                        self.bot.close()
+                        if self._has_upcoming_schedules(within_minutes=10):
+                            logger.info("Keeping browser open - more schedules coming up soon")
+                        else:
+                            logger.info("Closing browser after successful scheduled job...")
+                            self.bot.close()
                 except Exception as e:
                     logger.warning(f"Error closing browser after scheduled job: {e}")
             else:
@@ -143,7 +152,7 @@ class MessageScheduler:
         self._schedule_by_repeat(job, repeat, scheduled_time)
         logger.info(f"Image scheduled: {group_name} at {scheduled_time} ({repeat})")
 
-    def schedule_poll(self, group_name: str, question: str, options: List[str], allow_multiple: bool, scheduled_time: str, repeat: str = "once", profile_name: str = None):
+    def schedule_poll(self, group_name: str, question: str, options: List[str], allow_multiple: bool, scheduled_time: str, repeat: str = "once", profile_name: str = None, batch_id: str = None):
         """Schedule a poll to be sent."""
         entry = {
             "type": "poll",
@@ -155,7 +164,8 @@ class MessageScheduler:
             "repeat": repeat,
             "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "status": "pending",
-            "profile_name": profile_name
+            "profile_name": profile_name,
+            "batch_id": batch_id
         }
         self.scheduled_messages.append(entry)
 
@@ -182,11 +192,14 @@ class MessageScheduler:
                 except Exception as e:
                     logger.warning(f"Could not mark schedule as done: {e}")
 
-                # Close browser only after successful send
+                # Close browser only if no upcoming schedules
                 try:
                     if self.bot and self.bot.driver:
-                        logger.info("Closing browser after successful scheduled job...")
-                        self.bot.close()
+                        if self._has_upcoming_schedules(within_minutes=10):
+                            logger.info("Keeping browser open - more schedules coming up soon")
+                        else:
+                            logger.info("Closing browser after successful scheduled job...")
+                            self.bot.close()
                 except Exception as e:
                     logger.warning(f"Error closing browser after scheduled job: {e}")
             else:
@@ -213,11 +226,17 @@ class MessageScheduler:
 
         if repeat == "once":
             if absolute_dt is not None:
-                delta = (absolute_dt - datetime.now())
+                # Normalize both times to ignore seconds for comparison
+                absolute_dt_normalized = absolute_dt.replace(second=0, microsecond=0)
+                now_normalized = datetime.now().replace(second=0, microsecond=0)
+                delta = (absolute_dt_normalized - now_normalized)
                 delay_seconds = int(delta.total_seconds())
-                if delay_seconds <= 0:
+
+                # Allow schedules in the current minute (delay_seconds == 0) to run immediately
+                if delay_seconds < 0:
                     logger.warning(f"Scheduled time {absolute_dt} is in the past; skipping job")
                     return
+
                 job_ref = None
                 def wrapper():
                     nonlocal job_ref
@@ -226,7 +245,14 @@ class MessageScheduler:
                         schedule.cancel_job(job_ref)  # type: ignore
                     except Exception:
                         pass
-                job_ref = schedule.every(delay_seconds).seconds.do(wrapper).tag(f"once-{len(self.scheduled_messages)}")
+
+                # If delay is 0 (current minute), run immediately
+                if delay_seconds == 0:
+                    logger.info(f"Schedule for {absolute_dt} is in current minute ({datetime.now()}), running immediately")
+                    # Schedule to run in the next second to ensure bot is ready
+                    job_ref = schedule.every(1).seconds.do(wrapper).tag(f"once-{len(self.scheduled_messages)}")
+                else:
+                    job_ref = schedule.every(delay_seconds).seconds.do(wrapper).tag(f"once-{len(self.scheduled_messages)}")
             else:
                 job_ref = None
                 def wrapper():
@@ -246,12 +272,19 @@ class MessageScheduler:
         else:
             logger.warning(f"Unknown repeat type: {repeat}. Defaulting to 'once'")
             if absolute_dt is not None:
-                delta = (absolute_dt - datetime.now())
+                # Normalize both times to ignore seconds for comparison
+                absolute_dt_normalized = absolute_dt.replace(second=0, microsecond=0)
+                now_normalized = datetime.now().replace(second=0, microsecond=0)
+                delta = (absolute_dt_normalized - now_normalized)
                 delay_seconds = int(delta.total_seconds())
-                if delay_seconds > 0:
-                    schedule.every(delay_seconds).seconds.do(job).tag(f"once-{len(self.scheduled_messages)}")
-                else:
+                if delay_seconds < 0:
                     logger.warning(f"Scheduled time {absolute_dt} is in the past; skipping job")
+                elif delay_seconds == 0:
+                    # Run in next second if in current minute
+                    logger.info(f"Schedule for {absolute_dt} is in current minute ({datetime.now()}), scheduling for immediate execution")
+                    schedule.every(1).seconds.do(job).tag(f"once-{len(self.scheduled_messages)}")
+                else:
+                    schedule.every(delay_seconds).seconds.do(job).tag(f"once-{len(self.scheduled_messages)}")
             else:
                 schedule.every().day.at(time_only or scheduled_time).do(job).tag(f"once-{len(self.scheduled_messages)}")
 
@@ -292,6 +325,7 @@ class MessageScheduler:
             for schedule_data in schedules:
                 typ = schedule_data.get("type", "message")
                 profile_name = schedule_data.get("profile_name")
+                batch_id = schedule_data.get("batch_id")
                 if typ == "image":
                     self.schedule_image(
                         group_name=schedule_data.get("group_name"),
@@ -299,7 +333,8 @@ class MessageScheduler:
                         caption=schedule_data.get("caption"),
                         scheduled_time=schedule_data.get("time") or schedule_data.get("scheduled_time"),
                         repeat=schedule_data.get("repeat", "once"),
-                        profile_name=profile_name
+                        profile_name=profile_name,
+                        batch_id=batch_id
                     )
                 elif typ == "poll":
                     self.schedule_poll(
@@ -309,7 +344,8 @@ class MessageScheduler:
                         allow_multiple=bool(schedule_data.get("allow_multiple", False)),
                         scheduled_time=schedule_data.get("time") or schedule_data.get("scheduled_time"),
                         repeat=schedule_data.get("repeat", "once"),
-                        profile_name=profile_name
+                        profile_name=profile_name,
+                        batch_id=batch_id
                     )
                 else:
                     self.schedule_message(
@@ -317,7 +353,8 @@ class MessageScheduler:
                         message=schedule_data.get("message"),
                         scheduled_time=schedule_data.get("time") or schedule_data.get("scheduled_time"),
                         repeat=schedule_data.get("repeat", "once"),
-                        profile_name=profile_name
+                        profile_name=profile_name,
+                        batch_id=batch_id
                     )
 
             logger.info(f"Loaded {len(schedules)} scheduled messages from {file_path}")
@@ -465,13 +502,15 @@ class MessageScheduler:
         self.clear_all()
         for data in entries:
             typ = data.get("type", "message")
+            batch_id = data.get("batch_id")
             if typ == "image":
                 self.schedule_image(
                     group_name=data.get("group_name"),
                     image_path=data.get("image_path"),
                     caption=data.get("caption"),
                     scheduled_time=data.get("time") or data.get("scheduled_time"),
-                    repeat=data.get("repeat", "once")
+                    repeat=data.get("repeat", "once"),
+                    batch_id=batch_id
                 )
             elif typ == "poll":
                 self.schedule_poll(
@@ -480,14 +519,16 @@ class MessageScheduler:
                     options=data.get("options", []),
                     allow_multiple=bool(data.get("allow_multiple", False)),
                     scheduled_time=data.get("time") or data.get("scheduled_time"),
-                    repeat=data.get("repeat", "once")
+                    repeat=data.get("repeat", "once"),
+                    batch_id=batch_id
                 )
             else:
                 self.schedule_message(
                     group_name=data.get("group_name"),
                     message=data.get("message"),
                     scheduled_time=data.get("time") or data.get("scheduled_time"),
-                    repeat=data.get("repeat", "once")
+                    repeat=data.get("repeat", "once"),
+                    batch_id=batch_id
                 )
 
     def list_scheduled_messages(self):
@@ -547,6 +588,53 @@ class MessageScheduler:
     def is_running(self) -> bool:
         """Return True if the scheduler background thread is running."""
         return bool(self._thread and self._thread.is_alive() and not self._stop_event.is_set())
+
+    def _has_upcoming_schedules(self, within_minutes: int = 10, batch_id: str = None) -> bool:
+        """
+        Check if there are any pending schedules within the next N minutes.
+
+        Args:
+            within_minutes (int): Look ahead this many minutes
+            batch_id (str): If provided, only check schedules with this batch_id
+
+        Returns:
+            bool: True if there are upcoming schedules
+        """
+        now = datetime.now()
+        cutoff = now + timedelta(minutes=within_minutes)
+
+        for entry in self.scheduled_messages:
+            # Skip if already done
+            if entry.get("status") == "done":
+                continue
+
+            # If batch_id is provided, only check schedules with matching batch_id
+            if batch_id and entry.get("batch_id") != batch_id:
+                continue
+
+            # Parse the scheduled time
+            scheduled_time_str = entry.get("scheduled_time") or entry.get("time")
+            if not scheduled_time_str:
+                continue
+
+            try:
+                # Try parsing with different formats
+                scheduled_time = None
+                for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"):
+                    try:
+                        scheduled_time = datetime.strptime(scheduled_time_str, fmt)
+                        break
+                    except ValueError:
+                        continue
+
+                if scheduled_time and now <= scheduled_time <= cutoff:
+                    logger.info(f"Found upcoming schedule for {entry.get('group_name')} at {scheduled_time} (batch: {entry.get('batch_id', 'none')})")
+                    return True
+            except Exception as e:
+                logger.warning(f"Error parsing schedule time {scheduled_time_str}: {e}")
+                continue
+
+        return False
 
     def _ensure_bot_ready(self, profile_name: str = None):
         """

@@ -3,6 +3,8 @@ import { SchedulerHeader } from "@/components/SchedulerHeader";
 import { ScheduleCard } from "@/components/ScheduleCard";
 import { AddScheduleForm } from "@/components/AddScheduleForm";
 import { EditScheduleDialog } from "@/components/EditScheduleDialog";
+import { ManageGroupNames } from "@/components/ManageGroupNames";
+import { Footer } from "@/components/Footer";
 import { toast } from "@/hooks/use-toast";
 
 const API_BASE = "http://localhost:8000";
@@ -57,6 +59,7 @@ const Index = () => {
   const [schedules, setSchedules] = useState<Schedule[]>(exampleSchedules);
   const [loading, setLoading] = useState(true);
   const [editingSchedule, setEditingSchedule] = useState<{ schedule: Schedule; index: number } | null>(null);
+  const [groupNamesRefresh, setGroupNamesRefresh] = useState(0);
 
   const fetchSchedules = async () => {
     try {
@@ -78,6 +81,13 @@ const Index = () => {
 
   useEffect(() => {
     fetchSchedules();
+
+    // Auto-refresh every 5 seconds to show completed schedules
+    const interval = setInterval(() => {
+      fetchSchedules();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleDelete = async (index: number) => {
@@ -101,17 +111,44 @@ const Index = () => {
 
   const handleSaveEdit = async (editedSchedule: Schedule) => {
     if (editingSchedule === null) return;
-    
+
     try {
+      // Validate minimum 2-minute gap between schedules
+      // Normalize times to ignore seconds
+      const editedTime = new Date(editedSchedule.time.replace(" ", "T"));
+      editedTime.setSeconds(0, 0); // Set seconds and milliseconds to 0
+      const editedTimeMs = editedTime.getTime();
+
+      for (let i = 0; i < schedules.length; i++) {
+        // Skip the schedule being edited
+        if (i === editingSchedule.index) continue;
+
+        const existingSchedule = schedules[i];
+        const existingTime = new Date(existingSchedule.time.replace(" ", "T"));
+        existingTime.setSeconds(0, 0); // Set seconds and milliseconds to 0
+        const existingTimeMs = existingTime.getTime();
+        const timeDiffMinutes = Math.abs(editedTimeMs - existingTimeMs) / (1000 * 60);
+
+        if (timeDiffMinutes < 2) {
+          const minutesNeeded = (2 - timeDiffMinutes).toFixed(1);
+          toast({
+            title: "Schedule too close",
+            description: `Minimum time between schedules is 2 minutes. This schedule is ${minutesNeeded} minute(s) too close to another schedule at ${existingSchedule.time}.`,
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+
       const newSchedules = [...schedules];
       newSchedules[editingSchedule.index] = editedSchedule;
-      
+
       await fetch(`${API_BASE}/schedules/load`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ entries: newSchedules }),
       });
-      
+
       toast({ title: "Schedule updated successfully" });
       fetchSchedules();
     } catch (error) {
@@ -120,12 +157,13 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--gradient-subtle)]">
+    <div className="min-h-screen bg-[var(--gradient-subtle)] flex flex-col">
       <SchedulerHeader />
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 flex-1">
         <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
-            <AddScheduleForm onScheduleAdded={fetchSchedules} />
+          <div className="lg:col-span-1 space-y-8">
+            <ManageGroupNames onGroupNamesChange={() => setGroupNamesRefresh(prev => prev + 1)} />
+            <AddScheduleForm onScheduleAdded={fetchSchedules} refreshGroupNames={groupNamesRefresh} />
           </div>
           <div className="lg:col-span-2">
             <div className="mb-6">
@@ -145,9 +183,9 @@ const Index = () => {
             ) : (
               <div className="grid gap-4">
                 {schedules.map((schedule, index) => (
-                  <ScheduleCard 
-                    key={index} 
-                    schedule={schedule} 
+                  <ScheduleCard
+                    key={index}
+                    schedule={schedule}
                     onDelete={() => handleDelete(index)}
                     onEdit={() => handleEdit(index)}
                   />
@@ -157,12 +195,14 @@ const Index = () => {
           </div>
         </div>
       </main>
+      <Footer />
 
       <EditScheduleDialog
         schedule={editingSchedule?.schedule || null}
         open={editingSchedule !== null}
         onOpenChange={(open) => !open && setEditingSchedule(null)}
         onSave={handleSaveEdit}
+        refreshGroupNames={groupNamesRefresh}
       />
     </div>
   );

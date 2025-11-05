@@ -8,6 +8,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Trash2, Upload } from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const API_BASE = "http://localhost:8000";
 
@@ -28,12 +43,29 @@ interface EditScheduleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (schedule: Schedule) => void;
+  refreshGroupNames?: number;
 }
 
-export const EditScheduleDialog = ({ schedule, open, onOpenChange, onSave }: EditScheduleDialogProps) => {
+export const EditScheduleDialog = ({ schedule, open, onOpenChange, onSave, refreshGroupNames }: EditScheduleDialogProps) => {
   const [editedSchedule, setEditedSchedule] = useState<Schedule | null>(null);
   const [newOption, setNewOption] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [groupNames, setGroupNames] = useState<string[]>([]);
+  const [openGroupName, setOpenGroupName] = useState(false);
+
+  const fetchGroupNames = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/group-names`);
+      const data = await response.json();
+      setGroupNames(data);
+    } catch (error) {
+      console.error("Failed to fetch group names:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchGroupNames();
+  }, [refreshGroupNames]);
 
   useEffect(() => {
     if (schedule) {
@@ -136,12 +168,55 @@ export const EditScheduleDialog = ({ schedule, open, onOpenChange, onSave }: Edi
         <div className="space-y-4">
           <div>
             <Label htmlFor="group_name">Group Name</Label>
-            <Input
-              id="group_name"
-              value={editedSchedule.group_name}
-              onChange={(e) => setEditedSchedule({ ...editedSchedule, group_name: e.target.value })}
-              placeholder="Cairo"
-            />
+            <Popover open={openGroupName} onOpenChange={setOpenGroupName}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openGroupName}
+                  className="w-full justify-between"
+                >
+                  {editedSchedule.group_name || "Select or type group name..."}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <CommandInput
+                    placeholder="Search or type group name..."
+                    value={editedSchedule.group_name}
+                    onValueChange={(value) => setEditedSchedule({ ...editedSchedule, group_name: value })}
+                  />
+                  <CommandList>
+                    <CommandEmpty>
+                      <div className="p-2 text-sm text-muted-foreground">
+                        Type to enter custom group name
+                      </div>
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {groupNames.map((name) => (
+                        <CommandItem
+                          key={name}
+                          value={name}
+                          onSelect={(currentValue) => {
+                            setEditedSchedule({ ...editedSchedule, group_name: currentValue });
+                            setOpenGroupName(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              editedSchedule.group_name === name ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
           
           <div>
@@ -235,7 +310,7 @@ export const EditScheduleDialog = ({ schedule, open, onOpenChange, onSave }: Edi
                       value={newOption}
                       onChange={(e) => setNewOption(e.target.value)}
                       placeholder="Add new option"
-                      onKeyPress={(e) => e.key === "Enter" && addOption()}
+                      onKeyDown={(e) => e.key === "Enter" && addOption()}
                     />
                     <Button variant="outline" onClick={addOption}>
                       <Plus className="h-4 w-4" />

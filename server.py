@@ -35,9 +35,16 @@ executor = ThreadPoolExecutor(max_workers=4)
 UPLOADS_DIR = Path("uploads")
 UPLOADS_DIR.mkdir(exist_ok=True)
 
+# Group names file
+GROUP_NAMES_FILE = "group_names.json"
+
 
 class LoadSchedulesBody(BaseModel):
     entries: Optional[list] = None
+
+
+class GroupNameBody(BaseModel):
+    name: str
 
 
 @app.on_event("startup")
@@ -293,6 +300,82 @@ def whatsapp_login():
     except Exception as e:
         logger.error(f"Error opening WhatsApp Web: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error opening WhatsApp Web: {str(e)}")
+
+
+@app.get("/group-names")
+def get_group_names():
+    """
+    Get list of saved group names
+    """
+    try:
+        if os.path.exists(GROUP_NAMES_FILE):
+            with open(GROUP_NAMES_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return data.get("groups", [])
+        return []
+    except Exception as e:
+        logger.error(f"Error getting group names: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting group names: {str(e)}")
+
+
+@app.post("/group-names")
+def add_group_name(body: GroupNameBody):
+    """
+    Add a new group name
+    """
+    try:
+        groups = []
+        if os.path.exists(GROUP_NAMES_FILE):
+            with open(GROUP_NAMES_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                groups = data.get("groups", [])
+
+        # Check if group name already exists
+        if body.name in groups:
+            return {"status": "exists", "message": "Group name already exists"}
+
+        # Add new group name
+        groups.append(body.name)
+
+        # Save to file
+        with open(GROUP_NAMES_FILE, 'w', encoding='utf-8') as f:
+            json.dump({"groups": groups}, f, indent=2, ensure_ascii=False)
+
+        return {"status": "added", "groups": groups}
+    except Exception as e:
+        logger.error(f"Error adding group name: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error adding group name: {str(e)}")
+
+
+@app.delete("/group-names/{name}")
+def delete_group_name(name: str):
+    """
+    Delete a group name
+    """
+    try:
+        if not os.path.exists(GROUP_NAMES_FILE):
+            raise HTTPException(status_code=404, detail="No group names found")
+
+        with open(GROUP_NAMES_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            groups = data.get("groups", [])
+
+        if name not in groups:
+            raise HTTPException(status_code=404, detail="Group name not found")
+
+        # Remove group name
+        groups.remove(name)
+
+        # Save to file
+        with open(GROUP_NAMES_FILE, 'w', encoding='utf-8') as f:
+            json.dump({"groups": groups}, f, indent=2, ensure_ascii=False)
+
+        return {"status": "deleted", "groups": groups}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting group name: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error deleting group name: {str(e)}")
 
 
 # For local running: uvicorn server:app --reload
