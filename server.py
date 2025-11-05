@@ -244,5 +244,56 @@ def get_chrome_profiles():
         raise HTTPException(status_code=500, detail=f"Error getting Chrome profiles: {str(e)}")
 
 
+@app.get("/whatsapp/status")
+def whatsapp_status():
+    """
+    Check if WhatsApp session exists (logged in previously).
+    Note: Browser is closed between messages, but session is saved.
+    """
+    global bot
+    if not bot:
+        return {"connected": False, "message": "Bot not initialized"}
+
+    try:
+        import os
+        # Check if chrome_data profile exists (indicates previous login)
+        chrome_data_path = "./chrome_data"
+        if os.path.exists(chrome_data_path) and os.path.isdir(chrome_data_path):
+            # Check if there's actual session data
+            session_files = os.listdir(chrome_data_path)
+            if len(session_files) > 0:
+                return {"connected": True, "message": "Session saved (logged in)"}
+
+        return {"connected": False, "message": "Not logged in - Click Login button"}
+    except Exception as e:
+        return {"connected": False, "message": f"Error: {str(e)}"}
+
+
+@app.post("/whatsapp/login")
+def whatsapp_login():
+    """
+    Simply open WhatsApp Web for login.
+    User will manually scan QR code and close browser when done.
+    """
+    global bot
+    if not bot:
+        raise HTTPException(status_code=500, detail="Bot not initialized")
+
+    try:
+        logger.info("Opening WhatsApp Web for login...")
+
+        # Just start the bot (opens Chrome with WhatsApp Web)
+        bot.start()
+
+        return {
+            "status": "opened",
+            "message": "WhatsApp Web opened. Scan QR code and close browser when done."
+        }
+
+    except Exception as e:
+        logger.error(f"Error opening WhatsApp Web: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error opening WhatsApp Web: {str(e)}")
+
+
 # For local running: uvicorn server:app --reload
 

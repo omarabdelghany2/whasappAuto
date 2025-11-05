@@ -386,14 +386,17 @@ class MessageScheduler:
 
     def get_finished_schedules(self) -> List[Dict]:
         """
-        Get all finished schedules
+        Get all finished schedules, ordered by latest first
 
         Returns:
-            List[Dict]: List of finished schedules
+            List[Dict]: List of finished schedules (newest first)
         """
         try:
             with open(self.finished_schedules_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                schedules = json.load(f)
+                # Sort by completed_at timestamp, newest first
+                schedules.sort(key=lambda x: x.get('completed_at', ''), reverse=True)
+                return schedules
         except FileNotFoundError:
             return []
         except Exception as e:

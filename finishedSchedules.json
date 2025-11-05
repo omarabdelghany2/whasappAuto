@@ -2,209 +2,75 @@
   {
     "type": "poll",
     "group_name": "Cairo",
-    "question": "what we will eat today",
+    "question": "who will win today ?",
     "options": [
-      "chicken",
-      "meat",
-      "koshary"
+      "Real Madrid",
+      "Liver pool",
+      "Draw"
     ],
     "allow_multiple": false,
-    "scheduled_time": "2025-10-29 16:15",
+    "scheduled_time": "2025-11-04 22:30",
     "repeat": "once",
-    "created_at": "2025-10-29 16:14:27",
+    "created_at": "2025-11-04 22:29:11",
     "status": "done",
-    "completed_at": "2025-10-29 16:16:54",
-    "time": "2025-10-29 16:15"
+    "profile_name": null,
+    "completed_at": "2025-11-04 22:31:10",
+    "time": "2025-11-04 22:30"
   },
   {
     "type": "image",
-    "group_name": "Cairo",
-    "image_path": "/Users/omarabdelghany/Documents/Work Documents/whasappAuto/uploads/img_v3_02ra_80a0d4eb-7de9-4181-ab9a-e0cc7e82438g_1.JPG",
-    "caption": "hey mr Leon is the host",
-    "scheduled_time": "2025-10-29 16:54",
-    "repeat": "once",
-    "created_at": "2025-10-29 16:53:26",
-    "status": "done",
-    "completed_at": "2025-10-29 16:55:28",
-    "time": "2025-10-29 16:54"
-  },
-  {
-    "type": "poll",
-    "group_name": "Cairo",
-    "question": "what will you do next",
-    "options": [
-      "Play football",
-      "Eat",
-      "work",
-      "Gym"
-    ],
-    "allow_multiple": false,
-    "scheduled_time": "2025-10-30 14:28",
-    "repeat": "once",
-    "created_at": "2025-10-30 14:27:21",
-    "status": "done",
-    "completed_at": "2025-10-30 14:30:13",
-    "time": "2025-10-30 14:28"
-  },
-  {
-    "group_name": "Cairo",
-    "message": "Good morning I will enter to test it now please be patient",
-    "scheduled_time": "2025-10-30 14:38",
-    "repeat": "once",
-    "created_at": "2025-10-30 14:37:36",
-    "type": "message",
-    "status": "done",
-    "completed_at": "2025-10-30 14:38:57",
-    "time": "2025-10-30 14:38"
-  },
-  {
-    "type": "image",
-    "group_name": "Cairo",
-    "image_path": "/Users/omarabdelghany/Documents/Work Documents/whasappAuto/uploads/img_v3_02ra_80a0d4eb-7de9-4181-ab9a-e0cc7e82438g_2.JPG",
-    "caption": "this was a magnificent day",
-    "scheduled_time": "2025-10-30 14:45",
-    "repeat": "once",
-    "created_at": "2025-10-30 14:44:46",
-    "status": "done",
-    "completed_at": "2025-10-30 14:46:25",
-    "time": "2025-10-30 14:45"
-  },
-  {
-    "type": "image",
-    "group_name": "Cairo",
-    "image_path": "/Users/omarabdelghany/Documents/Work Documents/whasappAuto/uploads/img_v3_02ra_80a0d4eb-7de9-4181-ab9a-e0cc7e82438g_3.JPG",
-    "caption": "last Test",
-    "scheduled_time": "2025-10-30 14:54",
-    "repeat": "once",
-    "created_at": "2025-10-30 14:53:16",
-    "status": "done",
-    "completed_at": "2025-10-30 14:55:01",
-    "time": "2025-10-30 14:54"
-  },
-  {
-    "type": "image",
-    "group_name": "Cairo",
-    "image_path": "/Users/omarabdelghany/Documents/Work Documents/whasappAuto/uploads/img_v3_02ra_80a0d4eb-7de9-4181-ab9a-e0cc7e82438g_3.JPG",
-    "caption": "last Test",
-    "scheduled_time": "2025-10-30 14:58",
-    "repeat": "once",
-    "created_at": "2025-10-30 14:57:21",
-    "status": "done",
-    "completed_at": "2025-10-30 14:59:04",
-    "time": "2025-10-30 14:58"
-  },
-  {
-    "type": "image",
-    "group_name": "Cairo ",
-    "image_path": "/Users/omarabdelghany/Documents/Work Documents/whasappAuto/uploads/img_v3_02ra_80a0d4eb-7de9-4181-ab9a-e0cc7e82438g_4.JPG",
-    "caption": "this is a test message we are simulating we are talking to kids",
-    "scheduled_time": "2025-10-30 15:23",
-    "repeat": "once",
-    "created_at": "2025-10-30 15:22:35",
-    "status": "done",
-    "completed_at": "2025-10-30 15:24:32",
-    "time": "2025-10-30 15:23"
-  },
-  {
-    "type": "poll",
-    "group_name": "Cairo",
-    "question": "what is your favorite food",
-    "options": [
-      "Pizza",
-      "Burger",
-      "chicken"
-    ],
-    "allow_multiple": false,
-    "scheduled_time": "2025-10-30 15:26",
-    "repeat": "once",
-    "created_at": "2025-10-30 15:25:19",
-    "status": "done",
-    "completed_at": "2025-10-30 15:27:45",
-    "time": "2025-10-30 15:26"
-  },
-  {
     "group_name": "Omar Abdelghany",
-    "message": "Good morning 3amoora",
-    "scheduled_time": "2025-11-02 12:23",
+    "image_path": "/Users/omarabdelghany/Documents/Work Documents/whasappAuto/uploads/img_v3_02ra_80a0d4eb-7de9-4181-ab9a-e0cc7e82438g_5.JPG",
+    "caption": "this is the endddd",
+    "scheduled_time": "2025-11-04 22:43",
     "repeat": "once",
-    "created_at": "2025-11-02 12:22:13",
-    "type": "message",
+    "created_at": "2025-11-04 22:42:43",
     "status": "done",
     "profile_name": null,
-    "completed_at": "2025-11-02 12:23:54",
-    "time": "2025-11-02 12:23"
+    "completed_at": "2025-11-04 22:43:59",
+    "time": "2025-11-04 22:43"
   },
   {
     "group_name": "Omar abdelghany",
-    "message": "Good morning again 3amoora",
-    "scheduled_time": "2025-11-02 12:25",
+    "message": "this is the end also",
+    "scheduled_time": "2025-11-04 22:45",
     "repeat": "once",
-    "created_at": "2025-11-02 12:24:53",
+    "created_at": "2025-11-04 22:42:43",
     "type": "message",
     "status": "done",
     "profile_name": null,
-    "completed_at": "2025-11-02 12:25:52",
-    "time": "2025-11-02 12:25"
-  },
-  {
-    "group_name": "Omar abdelghany",
-    "message": "Good morning 3ammora we should wait about 5 seconds after ",
-    "scheduled_time": "2025-11-02 12:29",
-    "repeat": "once",
-    "created_at": "2025-11-02 12:28:07",
-    "type": "message",
-    "status": "done",
-    "profile_name": null,
-    "completed_at": "2025-11-02 12:29:57",
-    "time": "2025-11-02 12:29"
+    "completed_at": "2025-11-04 22:45:43",
+    "time": "2025-11-04 22:45"
   },
   {
     "type": "image",
     "group_name": "Omar abdelghany",
-    "image_path": "/Users/omarabdelghany/Documents/Work Documents/whasappAuto/uploads/89553754.jpeg",
-    "caption": "Hey omarrillio",
-    "scheduled_time": "2025-11-03 17:48",
+    "image_path": "/Users/omarabdelghany/Documents/Work Documents/whasappAuto/uploads/img_v3_02ra_80a0d4eb-7de9-4181-ab9a-e0cc7e82438g_6.JPG",
+    "caption": "this is the meet",
+    "scheduled_time": "2025-11-04 22:52",
     "repeat": "once",
-    "created_at": "2025-11-03 17:47:08",
+    "created_at": "2025-11-04 22:50:57",
     "status": "done",
     "profile_name": null,
-    "completed_at": "2025-11-03 17:49:08",
-    "time": "2025-11-03 17:48"
+    "completed_at": "2025-11-04 22:53:22",
+    "time": "2025-11-04 22:52"
   },
   {
     "type": "poll",
     "group_name": "Omar abdelghany",
-    "question": "what will you do today ?",
+    "question": "what is your favorite food ?",
     "options": [
-      "gym",
-      "sleep",
-      "work on t3arff"
+      "pizza",
+      "burger",
+      "manburger"
     ],
     "allow_multiple": true,
-    "scheduled_time": "2025-11-03 17:54",
+    "scheduled_time": "2025-11-04 22:54",
     "repeat": "once",
-    "created_at": "2025-11-03 17:53:39",
+    "created_at": "2025-11-04 22:50:57",
     "status": "done",
     "profile_name": null,
-    "completed_at": "2025-11-03 17:55:09",
-    "time": "2025-11-03 17:54"
-  },
-  {
-    "type": "poll",
-    "group_name": "Moustafa Abdelsattar",
-    "question": "what will you train today?",
-    "options": [
-      "Bench and tri",
-      "Back and BI",
-      "lEG"
-    ],
-    "allow_multiple": false,
-    "scheduled_time": "2025-11-03 18:02",
-    "repeat": "once",
-    "created_at": "2025-11-03 18:01:25",
-    "status": "done",
-    "profile_name": null,
-    "completed_at": "2025-11-03 18:03:10",
-    "time": "2025-11-03 18:02"
+    "completed_at": "2025-11-04 22:55:11",
+    "time": "2025-11-04 22:54"
   }
 ]

@@ -391,10 +391,37 @@ class WhatsAppBot:
                         EC.element_to_be_clickable((By.XPATH, selector))
                     )
                     send_button.click()
-                    logger.info(f"Image sent successfully using selector: {selector}!")
-                    # Wait for image to upload before returning (important!)
-                    logger.info("Waiting 5 seconds for image to upload...")
-                    time.sleep(5)  # Wait for upload to complete
+                    logger.info(f"Image send button clicked using selector: {selector}!")
+
+                    # Wait for image to upload completely (important for high-quality images!)
+                    logger.info("Waiting for image to upload and send...")
+                    # Wait up to 30 seconds for upload to complete
+                    # High-quality images may take longer to upload
+                    max_wait = 30
+                    wait_interval = 1
+                    elapsed = 0
+
+                    while elapsed < max_wait:
+                        time.sleep(wait_interval)
+                        elapsed += wait_interval
+
+                        # Check if there's an upload progress indicator or if send is complete
+                        # WhatsApp shows a clock icon or progress while uploading
+                        try:
+                            # Look for upload progress indicator (clock icon or progress bar)
+                            uploading = self.driver.find_elements(By.XPATH, '//span[@data-icon="msg-time" or @data-icon="msg-check" or @data-icon="status-time"]')
+                            if uploading:
+                                logger.info(f"Upload in progress... ({elapsed}s)")
+                                continue
+                            else:
+                                # No upload indicator found, likely sent
+                                break
+                        except:
+                            pass
+
+                    logger.info(f"Image upload completed after {elapsed} seconds!")
+                    # Extra buffer to ensure message is fully sent
+                    time.sleep(2)
                     return True
                 except:
                     continue
