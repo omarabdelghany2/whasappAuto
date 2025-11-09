@@ -2,6 +2,58 @@
 
 Automate sending messages to WhatsApp Web groups with scheduling capabilities. Features both a modern web UI and CLI interface.
 
+---
+
+## 👥 For Non-Technical Users
+
+**New to this?** No problem!
+
+👉 **Open the file: `START-HERE.txt`** or **`HOW-TO-USE.md`**
+
+These files have **simple, step-by-step instructions** with no technical jargon.
+
+### Super Quick Start:
+
+**Windows:** Double-click `INSTALL-WINDOWS.bat`, then `START-WINDOWS.bat`
+**Mac:** Double-click `INSTALL-MAC.command`, then `START-MAC.command`
+**Linux:** Double-click `INSTALL-LINUX.sh`, then `START-LINUX.sh`
+
+That's it! The app will guide you through everything.
+
+---
+
+## 👨‍💻 For Developers & Technical Users
+
+## Quick Start
+
+Get up and running in 2 simple steps on **any platform** (Windows, macOS, Linux):
+
+### Windows
+
+```batch
+# 1. Install everything (double-click or run in cmd)
+install.bat
+
+# 2. Start the app (double-click or run in cmd)
+start.bat
+```
+
+### macOS / Linux
+
+```bash
+# 1. Install everything
+python3 install.py
+# or: ./install.sh
+
+# 2. Start the app
+python3 start.py
+# or: ./start.sh
+```
+
+Then open **http://localhost:5173** in your browser and start scheduling!
+
+**First time?** You'll need to scan the WhatsApp QR code once (click "Login" button in the UI).
+
 ## Features
 
 ### Core Features
@@ -28,18 +80,55 @@ The project consists of three main components:
 
 ## Installation
 
-### Backend Setup
+### Cross-Platform Installation (Recommended)
+
+The installation script works on **Windows, macOS, and Linux**:
+
+**Windows:**
+```batch
+install.bat
+```
+Or double-click `install.bat`
+
+**macOS / Linux:**
+```bash
+python3 install.py
+# or: ./install.sh
+```
+
+**What the installer does:**
+- ✅ Checks system requirements (Python, Node.js, npm, Chrome)
+- ✅ Guides you to install missing requirements
+- ✅ Installs pipenv automatically if needed
+- ✅ Installs all Python dependencies via pipenv
+- ✅ Installs all Frontend dependencies via npm
+- ✅ Creates necessary directories (uploads/, chrome_data/)
+- ✅ Sets up configuration files (.env, schedules.json, etc.)
+- ✅ Verifies installation success
+- ✅ Shows platform-specific next steps
+
+**System Requirements:**
+- **Python 3.7+** (installer will guide you if missing)
+- **Node.js 18+** and npm (installer will guide you if missing)
+- **Google Chrome** browser
+- **Windows 10+**, **macOS 10.14+**, or **Linux** (any modern distro)
+
+### Manual Installation
+
+If you prefer to install manually:
+
+#### Backend Setup
 
 1. Install Python dependencies:
 ```bash
 pip install -r requirements.txt
-# or using pipenv
+# or using pipenv (recommended)
 pipenv install
 ```
 
 2. Make sure you have Chrome browser installed
 
-### Frontend Setup
+#### Frontend Setup
 
 1. Navigate to the Frontend directory:
 ```bash
@@ -47,14 +136,52 @@ cd Frontend
 npm install
 ```
 
-2. Build the frontend:
+#### Create Required Files
+
 ```bash
-npm run build
+# Create necessary directories
+mkdir -p uploads chrome_data
+
+# Create empty data files
+echo "[]" > schedules.json
+echo "[]" > finishedSchedules.json
+echo "[]" > group_names.json
+
+# Create .env file
+cp .env.example .env  # or create manually
 ```
 
 ## Usage
 
-### Option 1: Web UI (Recommended)
+### Option 1: One-Click Startup (Easiest!)
+
+Start the application on any platform:
+
+**Windows:**
+```batch
+start.bat
+```
+Or double-click `start.bat`
+
+**macOS / Linux:**
+```bash
+python3 start.py
+# or: ./start.sh
+```
+
+**What the startup script does:**
+- ✅ Checks all dependencies are installed
+- ✅ Starts backend server (http://localhost:8000)
+- ✅ Starts frontend server (http://localhost:5173)
+- ✅ Opens the app in your browser automatically
+- ✅ Shows real-time status and URLs
+- ✅ Handles graceful shutdown on Ctrl+C
+
+**To stop everything:** Press `Ctrl+C` - all services will shut down gracefully.
+
+**Logs:** Check `backend.log` and `frontend.log` if you need to debug.
+
+### Option 2: Manual Startup (Web UI)
 
 1. **Start the backend server:**
 ```bash
@@ -79,7 +206,7 @@ npm run dev
    - View completed schedules by clicking "Finished"
    - Delete individual or all finished schedules
 
-### Option 2: CLI (Command Line)
+### Option 3: CLI (Command Line)
 
 ### First Time Setup
 
@@ -395,6 +522,10 @@ pipenv run uvicorn server:app --reload
 
 1. **Start the servers:**
 ```bash
+# Easy way - One command
+./start.sh
+
+# Or manual way - Two terminals
 # Terminal 1 - Backend
 pipenv run uvicorn server:app --reload
 
@@ -402,7 +533,7 @@ pipenv run uvicorn server:app --reload
 cd Frontend && npm run dev
 ```
 
-2. **Open browser** to `http://localhost:5173`
+2. **Open browser** to `http://localhost:5173` (auto-opens if using start.sh)
 
 3. **Add a schedule:**
    - Select "Text" tab

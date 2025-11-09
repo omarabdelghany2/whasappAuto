@@ -1,0 +1,103 @@
+╔════════════════════════════════════════════════════════════════════╗
+║                                                                    ║
+║              WHATSAPP SCHEDULER - START HERE                       ║
+║                                                                    ║
+╚════════════════════════════════════════════════════════════════════╝
+
+Welcome! This app helps you automatically send WhatsApp messages.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📖 NEW USER? SUPER SIMPLE! JUST 2 STEPS:
+
+   STEP 1: Open YOUR computer's folder
+   ─────────────────────────────────────────────────────────────
+
+   📁 Windows Users  → Open the "Windows" folder
+   📁 Mac Users      → Open the "Mac" folder
+   📁 Linux Users    → Open the "Linux" folder
+
+
+   STEP 2: Double-click the files in order
+   ─────────────────────────────────────────────────────────────
+
+   First time:      Double-click → 1-INSTALL
+                    (wait 3-5 minutes)
+
+   Every time:      Double-click → 2-START
+                    (app opens in 10 seconds)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📂 FOLDER CONTENTS:
+
+   📁 Windows/
+      ├── 1-INSTALL.bat  ← Double-click to install
+      └── 2-START.bat    ← Double-click to start
+
+   📁 Mac/
+      ├── 1-INSTALL.command  ← Double-click to install
+      └── 2-START.command    ← Double-click to start
+
+   📁 Linux/
+      ├── 1-INSTALL.sh   ← Double-click to install
+      └── 2-START.sh     ← Double-click to start
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️  BEFORE INSTALLING:
+
+   You need these 3 free programs installed first:
+
+   1. Python 3       → https://www.python.org/downloads/
+      (Windows users: Check "Add Python to PATH" during install!)
+
+   2. Node.js        → https://nodejs.org/
+      (Choose the LTS version)
+
+   3. Google Chrome  → https://www.google.com/chrome/
+
+   The install file will check these and guide you if missing!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 COMPLETE WALKTHROUGH:
+
+   1. Install Python, Node.js, and Chrome (links above)
+
+   2. Open YOUR folder (Windows, Mac, or Linux)
+
+   3. Double-click "1-INSTALL" file
+      → Wait 3-5 minutes
+      → See "Installation Complete!" message
+
+   4. Double-click "2-START" file
+      → Wait 10 seconds
+      → Browser opens automatically
+      → Use the app!
+
+   5. To stop: Press Ctrl+C in the window
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📚 NEED MORE HELP?
+
+   Read the detailed guide: "HOW-TO-USE.md"
+
+   It has step-by-step instructions with screenshots!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ THAT'S IT!
+
+   Just:
+   1. Open your computer's folder
+   2. Double-click "1-INSTALL" (one time)
+   3. Double-click "2-START" (every time you want to use it)
+
+   Easy! 🎉
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Questions? Check "HOW-TO-USE.md" for detailed help!
+
