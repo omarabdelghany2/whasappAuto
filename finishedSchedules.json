@@ -355,5 +355,90 @@
     "batch_id": null,
     "completed_at": "2025-11-10 12:19:50",
     "time": "2025-11-10 12:18"
+  },
+  {
+    "group_name": "تحدي 51talk: مغامرتنا الأونلاين بالهواء الطلقG1",
+    "message": "hi",
+    "scheduled_time": "2025-11-10 16:32",
+    "repeat": "once",
+    "created_at": "2025-11-10 16:32:02",
+    "type": "message",
+    "status": "done",
+    "profile_name": null,
+    "batch_id": null,
+    "completed_at": "2025-11-10 16:32:41",
+    "time": "2025-11-10 16:32"
+  },
+  {
+    "group_name": "تحدي 51talk: مغامرتنا الأونلاين بالهواء الطلقG1",
+    "message": "hi",
+    "scheduled_time": "2025-11-10 16:35",
+    "repeat": "once",
+    "created_at": "2025-11-10 16:35:35",
+    "type": "message",
+    "status": "done",
+    "profile_name": null,
+    "batch_id": null,
+    "completed_at": "2025-11-10 16:36:16",
+    "time": "2025-11-10 16:35"
+  },
+  {
+    "group_name": "Omar abdelghany",
+    "message": "hi",
+    "scheduled_time": "2025-11-10 16:36",
+    "repeat": "once",
+    "created_at": "2025-11-10 16:36:39",
+    "type": "message",
+    "status": "done",
+    "profile_name": null,
+    "batch_id": null,
+    "completed_at": "2025-11-10 16:37:20",
+    "time": "2025-11-10 16:36"
+  },
+  {
+    "type": "poll",
+    "group_name": "Omar abdelghany",
+    "question": "his",
+    "options": [
+      "hh",
+      "jj",
+      "kk",
+      "ll"
+    ],
+    "allow_multiple": false,
+    "scheduled_time": "2025-11-10 16:37",
+    "repeat": "once",
+    "created_at": "2025-11-10 16:37:52",
+    "status": "done",
+    "profile_name": null,
+    "batch_id": null,
+    "completed_at": "2025-11-10 16:39:07",
+    "time": "2025-11-10 16:37"
+  },
+  {
+    "group_name": "Omar abdelghany",
+    "message": "hiii",
+    "scheduled_time": "2025-11-10 16:41",
+    "repeat": "once",
+    "created_at": "2025-11-10 16:41:03",
+    "type": "message",
+    "status": "done",
+    "profile_name": null,
+    "batch_id": null,
+    "completed_at": "2025-11-10 16:41:46",
+    "time": "2025-11-10 16:41"
+  },
+  {
+    "group_name": "تحدي 51talk: مغامرتنا الأونلاين بالهواء الطلقG1",
+    "message": "hi",
+    "scheduled_time": "2025-11-10 16:41",
+    "repeat": "once",
+    "created_at": "2025-11-10 16:41:57",
+    "type": "message",
+    "status": "done",
+    "profile_name": null,
+    "batch_id": null,
+    "completed_at": "2025-11-10 16:42:39",
+    "time": "2025-11-10 16:41"
   }
 ]

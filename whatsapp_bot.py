@@ -35,6 +35,69 @@ class WhatsAppBot:
         self.headless = headless
         self.wait_time = 10  # Reduced from 30 for faster operations
 
+    def _type_text_bidi(self, element, text):
+        """
+        Type text that may contain mixed RTL/LTR content (Arabic/English).
+        Uses JavaScript for proper bidirectional text handling.
+
+        Args:
+            element: WebElement to type into
+            text (str): Text to type (can be mixed Arabic/English)
+
+        Returns:
+            bool: True if successful, False if failed
+        """
+        try:
+            logger.info(f"Attempting to type text: {text[:50]}...")
+
+            # Use JavaScript to insert text properly with multiple events for WhatsApp
+            script = """
+            var element = arguments[0];
+            var text = arguments[1];
+            element.focus();
+
+            // Set the text content directly
+            element.textContent = text;
+
+            // Trigger multiple events that WhatsApp listens for
+            element.dispatchEvent(new Event('input', { bubbles: true }));
+            element.dispatchEvent(new Event('change', { bubbles: true }));
+            element.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
+            element.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+
+            // Set cursor to end
+            var range = document.createRange();
+            var sel = window.getSelection();
+            range.selectNodeContents(element);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+
+            return element.textContent;
+            """
+            result = self.driver.execute_script(script, element, text)
+            logger.info(f"JavaScript typing succeeded. Content in box: {result[:50] if result else 'EMPTY'}...")
+
+            # Verify text was actually set
+            if result and len(result) > 0:
+                return True
+            else:
+                logger.warning("JavaScript set text but element is empty, trying send_keys")
+                element.send_keys(text)
+                logger.info(f"Text typed using send_keys fallback: {text[:50]}...")
+                return True
+
+        except Exception as e:
+            logger.error(f"JavaScript typing failed with error: {e}")
+            logger.info("Trying send_keys as fallback...")
+            try:
+                element.send_keys(text)
+                logger.info(f"Text typed using send_keys fallback: {text[:50]}...")
+                return True
+            except Exception as e2:
+                logger.error(f"send_keys also failed: {e2}")
+                return False
+
     def start(self, profile_path: str = None):
         """
         Start the browser and open WhatsApp Web
@@ -249,17 +312,22 @@ class WhatsAppBot:
 
             # Click on the message box
             message_box.click()
-            time.sleep(0.3)  # Reduced from 1s
+            time.sleep(0.5)
 
-            # Type the message (handle multi-line messages)
-            lines = message.split('\n')
-            for i, line in enumerate(lines):
-                message_box.send_keys(line)
-                if i < len(lines) - 1:
-                    # Send Shift+Enter for new line
-                    message_box.send_keys(Keys.SHIFT + Keys.ENTER)
+            # Type message using bidirectional text support (Arabic/English mix)
+            typed_successfully = self._type_text_bidi(message_box, message)
 
-            time.sleep(0.3)  # Reduced from 1s
+            # If JavaScript method failed, try traditional send_keys with line handling
+            if not typed_successfully:
+                logger.info("Using traditional typing method for multi-line support")
+                lines = message.split('\n')
+                for i, line in enumerate(lines):
+                    message_box.send_keys(line)
+                    if i < len(lines) - 1:
+                        # Send Shift+Enter for new line
+                        message_box.send_keys(Keys.SHIFT + Keys.ENTER)
+
+            time.sleep(0.5)
 
             # Send the message - Try multiple methods
             try:
@@ -414,7 +482,7 @@ class WhatsAppBot:
                             # Click and add caption
                             caption_box.click()
                             time.sleep(0.3)  # Reduced from 0.5s
-                            caption_box.send_keys(caption)
+                            self._type_text_bidi(caption_box, caption)
                             logger.info(f"[OK] Caption added successfully: {caption}")
                             caption_added = True
                             time.sleep(0.3)  # Reduced from 1s
@@ -608,7 +676,7 @@ class WhatsAppBot:
                             # Click and add caption
                             caption_box.click()
                             time.sleep(0.3)
-                            caption_box.send_keys(caption)
+                            self._type_text_bidi(caption_box, caption)
                             logger.info(f"[OK] Caption added successfully: {caption}")
                             caption_added = True
                             time.sleep(0.3)
