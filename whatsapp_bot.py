@@ -454,6 +454,213 @@ class WhatsAppBot:
             traceback.print_exc()
             return False
 
+    def send_video(self, video_path, caption=None, group_name=None):
+        """
+        Send a video to the currently open chat
+
+        Args:
+            video_path (str): Path to the video file
+            caption (str): Optional caption for the video
+            group_name (str): Optional group name to send to
+        """
+        import os
+
+        logger.info(f"Sending video: {video_path}")
+        if group_name:
+            group_name = group_name.strip()
+            logger.info(f"Navigating to group for video: {group_name}")
+            if not self.search_group(group_name):
+                logger.error(f"Cannot open group '{group_name}' to send video")
+                return False
+
+        if not os.path.exists(video_path):
+            logger.error(f"Video file not found: {video_path}")
+            return False
+
+        try:
+            absolute_path = os.path.abspath(video_path)
+            logger.info(f"Absolute path: {absolute_path}")
+
+            # Click the attachment button first to open the menu
+            logger.info("Clicking attachment button to open menu...")
+
+            attach_selectors = [
+                '//div[@title="Attach"]',
+                '//span[@data-icon="plus"]',
+                '//span[@data-icon="clip"]',
+                '//button[@aria-label="Attach"]',
+                '//div[@aria-label="Attach"]'
+            ]
+
+            attach_clicked = False
+            for selector in attach_selectors:
+                try:
+                    attach_button = WebDriverWait(self.driver, 2).until(
+                        EC.element_to_be_clickable((By.XPATH, selector))
+                    )
+                    attach_button.click()
+                    logger.info(f"Clicked attach button with selector: {selector}")
+                    attach_clicked = True
+                    time.sleep(0.8)
+                    break
+                except Exception as e:
+                    logger.debug(f"Attach selector {selector} failed: {str(e)}")
+                    continue
+
+            if not attach_clicked:
+                logger.error("Could not find or click attachment button")
+                return False
+
+            # Find and use the file input (should open preview window)
+            logger.info("Looking for file input element...")
+            input_selectors = [
+                '//input[@accept="image/*,video/mp4,video/3gpp,video/quicktime"]',
+                '//input[@type="file"][@accept*="video"]',
+                '//input[@type="file"]'
+            ]
+
+            file_uploaded = False
+            for selector in input_selectors:
+                try:
+                    file_input = WebDriverWait(self.driver, 5).until(
+                        EC.presence_of_element_located((By.XPATH, selector))
+                    )
+                    logger.info(f"Found file input with selector: {selector}")
+
+                    # Send the file path - this should open the preview window
+                    file_input.send_keys(absolute_path)
+                    logger.info(f"Video file path sent: {absolute_path}")
+                    file_uploaded = True
+
+                    # Wait for preview window to appear
+                    logger.info("Waiting for video preview window to appear...")
+                    time.sleep(2)  # Give time for video to load in preview
+                    break
+                except Exception as e:
+                    logger.debug(f"File input selector {selector} failed: {str(e)}")
+                    continue
+
+            if not file_uploaded:
+                logger.error("Could not upload video file")
+                return False
+
+            # If there's a caption, add it to the preview window
+            if caption:
+                try:
+                    logger.info("Adding caption to video preview...")
+
+                    caption_selectors = [
+                        '//div[@contenteditable="true"][@role="textbox"]',
+                        '//div[@contenteditable="true" and @data-tab="10"]',
+                        '//div[contains(@class, "lexical")]//div[@contenteditable="true"]',
+                        '//div[@contenteditable="true" and contains(@aria-placeholder, "caption")]',
+                    ]
+
+                    caption_added = False
+                    for selector in caption_selectors:
+                        try:
+                            caption_box = WebDriverWait(self.driver, 2).until(
+                                EC.visibility_of_element_located((By.XPATH, selector))
+                            )
+
+                            # Make sure it's not the search box by checking data-tab attribute
+                            data_tab = caption_box.get_attribute('data-tab')
+                            if data_tab == '3':  # Skip search box
+                                logger.debug(f"Skipping search box (data-tab=3)")
+                                continue
+
+                            # Click and add caption
+                            caption_box.click()
+                            time.sleep(0.3)
+                            caption_box.send_keys(caption)
+                            logger.info(f"✓ Caption added successfully: {caption}")
+                            caption_added = True
+                            time.sleep(0.3)
+                            break
+
+                        except Exception as e:
+                            logger.debug(f"Caption selector {selector} failed: {str(e)}")
+                            continue
+
+                    if not caption_added:
+                        logger.warning("⚠ Could not add caption to preview window")
+
+                except Exception as e:
+                    logger.warning(f"Error adding caption: {str(e)}")
+
+            # Click the send button
+            time.sleep(0.5)
+            send_selectors = [
+                '//span[@data-icon="send"]',
+                '//button[@aria-label="Send"]',
+                '//div[@role="button"][@aria-label="Send"]',
+                '//span[@data-icon="send"]/parent::button',
+                '//span[@data-testid="send"]'
+            ]
+
+            for selector in send_selectors:
+                try:
+                    send_button = WebDriverWait(self.driver, 2).until(
+                        EC.element_to_be_clickable((By.XPATH, selector))
+                    )
+                    send_button.click()
+                    logger.info(f"Video send button clicked using selector: {selector}!")
+
+                    # Wait for video to upload completely - videos take much longer than images!
+                    logger.info("Waiting for video to upload and send...")
+                    # Videos can take a while to upload depending on size
+                    # We'll wait up to 2 minutes (120 seconds) for videos
+                    max_wait = 120
+                    wait_interval = 2
+                    elapsed = 0
+
+                    while elapsed < max_wait:
+                        time.sleep(wait_interval)
+                        elapsed += wait_interval
+
+                        # Check if there's an upload progress indicator
+                        # WhatsApp shows a progress bar or clock icon while uploading
+                        try:
+                            # Look for upload progress indicators
+                            uploading_indicators = self.driver.find_elements(
+                                By.XPATH,
+                                '//span[@data-icon="msg-time" or @data-icon="msg-check" or @data-icon="status-time" or contains(@class, "progress")]'
+                            )
+
+                            # Also check for progress bar or percentage
+                            progress_bars = self.driver.find_elements(
+                                By.XPATH,
+                                '//*[contains(@class, "progress") or contains(@role, "progressbar")]'
+                            )
+
+                            if uploading_indicators or progress_bars:
+                                logger.info(f"Video upload in progress... ({elapsed}s / {max_wait}s)")
+                                continue
+                            else:
+                                # No upload indicator found, video likely sent
+                                logger.info("No upload indicators found - video appears to be sent")
+                                break
+                        except Exception as e:
+                            logger.debug(f"Error checking upload status: {e}")
+                            pass
+
+                    logger.info(f"Video upload completed after {elapsed} seconds!")
+                    # Extra buffer to ensure video is fully sent and processed
+                    logger.info("Waiting additional 10 seconds to ensure video is fully sent...")
+                    time.sleep(10)
+                    return True
+                except:
+                    continue
+
+            logger.error("Could not find send button for video")
+            return False
+
+        except Exception as e:
+            logger.error(f"Failed to send video: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return False
+
     def send_poll(self, question, options, allow_multiple_answers=False, group_name=None):
         """
         Create and send a poll to the currently open chat
@@ -795,6 +1002,24 @@ class WhatsAppBot:
             return self.send_image(image_path, caption)
         else:
             logger.error(f"Failed to send image to group '{group_name}'")
+            return False
+
+    def send_video_to_group(self, group_name, video_path, caption=None):
+        """
+        Send a video to a specific group
+
+        Args:
+            group_name (str): Name of the group
+            video_path (str): Path to the video file
+            caption (str): Optional caption for the video
+        """
+        group_name = group_name.strip()
+        logger.info(f"Sending video to group '{group_name}'")
+
+        if self.search_group(group_name):
+            return self.send_video(video_path, caption)
+        else:
+            logger.error(f"Failed to send video to group '{group_name}'")
             return False
 
     def send_poll_to_group(self, group_name, question, options, allow_multiple_answers=False):

@@ -1,14 +1,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Image, BarChart3, Trash2, Calendar, Edit } from "lucide-react";
+import { MessageSquare, Image, BarChart3, Trash2, Calendar, Edit, Video } from "lucide-react";
 import { format } from "date-fns";
 
 interface Schedule {
-  type: "message" | "image" | "poll";
+  type: "message" | "image" | "video" | "poll";
   group_name: string;
   message?: string;
   image_path?: string;
+  video_path?: string;
   caption?: string;
   question?: string;
   options?: string[];
@@ -31,6 +32,8 @@ export const ScheduleCard = ({ schedule, onDelete, onEdit }: ScheduleCardProps) 
         return <MessageSquare className="h-5 w-5" />;
       case "image":
         return <Image className="h-5 w-5" />;
+      case "video":
+        return <Video className="h-5 w-5" />;
       case "poll":
         return <BarChart3 className="h-5 w-5" />;
     }
@@ -42,6 +45,8 @@ export const ScheduleCard = ({ schedule, onDelete, onEdit }: ScheduleCardProps) 
         return schedule.message;
       case "image":
         return schedule.caption || "Image message";
+      case "video":
+        return schedule.caption || "Video message";
       case "poll":
         return schedule.question;
     }

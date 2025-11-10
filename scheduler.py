@@ -152,6 +152,62 @@ class MessageScheduler:
         self._schedule_by_repeat(job, repeat, scheduled_time)
         logger.info(f"Image scheduled: {group_name} at {scheduled_time} ({repeat})")
 
+    def schedule_video(self, group_name: str, video_path: str, caption: Optional[str], scheduled_time: str, repeat: str = "once", profile_name: str = None, batch_id: str = None):
+        """Schedule a video to be sent."""
+        entry = {
+            "type": "video",
+            "group_name": group_name,
+            "video_path": video_path,
+            "caption": caption,
+            "scheduled_time": scheduled_time,
+            "repeat": repeat,
+            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "status": "pending",
+            "profile_name": profile_name,
+            "batch_id": batch_id
+        }
+        self.scheduled_messages.append(entry)
+
+        def job():
+            self._ensure_bot_ready(profile_name)
+            logger.info(f"Executing scheduled video to '{group_name}'")
+            success = self.bot.send_video_to_group(group_name, video_path, caption)
+            if success:
+                logger.info(f"Scheduled video sent successfully to '{group_name}'")
+                try:
+                    entry["status"] = "done"
+                    entry["completed_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                    # Save to finished schedules
+                    self.save_to_finished_schedules(entry)
+
+                    self.save_schedules_to_file('schedules.json')
+                    if repeat == "once":
+                        try:
+                            self.scheduled_messages.remove(entry)
+                            self.save_schedules_to_file('schedules.json')
+                        except Exception:
+                            pass
+                except Exception as e:
+                    logger.warning(f"Could not mark schedule as done: {e}")
+
+                # Close browser only if no upcoming schedules
+                try:
+                    if self.bot and self.bot.driver:
+                        if self._has_upcoming_schedules(within_minutes=10):
+                            logger.info("Keeping browser open - more schedules coming up soon")
+                        else:
+                            logger.info("Closing browser after successful scheduled job...")
+                            self.bot.close()
+                except Exception as e:
+                    logger.warning(f"Error closing browser after scheduled job: {e}")
+            else:
+                logger.error(f"Failed to send scheduled video to '{group_name}'")
+                logger.warning(f"Browser kept open for debugging. Please check WhatsApp Web.")
+
+        self._schedule_by_repeat(job, repeat, scheduled_time)
+        logger.info(f"Video scheduled: {group_name} at {scheduled_time} ({repeat})")
+
     def schedule_poll(self, group_name: str, question: str, options: List[str], allow_multiple: bool, scheduled_time: str, repeat: str = "once", profile_name: str = None, batch_id: str = None):
         """Schedule a poll to be sent."""
         entry = {
@@ -336,6 +392,16 @@ class MessageScheduler:
                         profile_name=profile_name,
                         batch_id=batch_id
                     )
+                elif typ == "video":
+                    self.schedule_video(
+                        group_name=schedule_data.get("group_name"),
+                        video_path=schedule_data.get("video_path"),
+                        caption=schedule_data.get("caption"),
+                        scheduled_time=schedule_data.get("time") or schedule_data.get("scheduled_time"),
+                        repeat=schedule_data.get("repeat", "once"),
+                        profile_name=profile_name,
+                        batch_id=batch_id
+                    )
                 elif typ == "poll":
                     self.schedule_poll(
                         group_name=schedule_data.get("group_name"),
@@ -507,6 +573,15 @@ class MessageScheduler:
                 self.schedule_image(
                     group_name=data.get("group_name"),
                     image_path=data.get("image_path"),
+                    caption=data.get("caption"),
+                    scheduled_time=data.get("time") or data.get("scheduled_time"),
+                    repeat=data.get("repeat", "once"),
+                    batch_id=batch_id
+                )
+            elif typ == "video":
+                self.schedule_video(
+                    group_name=data.get("group_name"),
+                    video_path=data.get("video_path"),
                     caption=data.get("caption"),
                     scheduled_time=data.get("time") or data.get("scheduled_time"),
                     repeat=data.get("repeat", "once"),

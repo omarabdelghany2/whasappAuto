@@ -148,7 +148,7 @@ def scheduler_stop():
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
     """
-    Upload an image file and return the absolute path.
+    Upload an image or video file and return the absolute path.
     This allows the frontend to upload files and get a real path for scheduling.
     """
     try:

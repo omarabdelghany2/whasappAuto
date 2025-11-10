@@ -27,10 +27,11 @@ import { cn } from "@/lib/utils";
 const API_BASE = "http://localhost:8000";
 
 interface Schedule {
-  type: "message" | "image" | "poll";
+  type: "message" | "image" | "video" | "poll";
   group_name: string;
   message?: string;
   image_path?: string;
+  video_path?: string;
   caption?: string;
   question?: string;
   options?: string[];

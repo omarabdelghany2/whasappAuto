@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
-import { MessageSquare, Image, BarChart3, Plus, Upload } from "lucide-react";
+import { MessageSquare, Image, BarChart3, Plus, Upload, Video } from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -44,9 +44,11 @@ export const AddScheduleForm = ({ onScheduleAdded, refreshGroupNames }: AddSched
   const [activeTab, setActiveTab] = useState("message");
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const [groupNames, setGroupNames] = useState<string[]>([]);
   const [openMessageGroup, setOpenMessageGroup] = useState(false);
   const [openImageGroup, setOpenImageGroup] = useState(false);
+  const [openVideoGroup, setOpenVideoGroup] = useState(false);
   const [openPollGroup, setOpenPollGroup] = useState(false);
   const [multiGroupMode, setMultiGroupMode] = useState(false);
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
@@ -60,6 +62,13 @@ export const AddScheduleForm = ({ onScheduleAdded, refreshGroupNames }: AddSched
   const [imageForm, setImageForm] = useState({
     group_name: "",
     image_path: "",
+    caption: "",
+    time: "",
+  });
+
+  const [videoForm, setVideoForm] = useState({
+    group_name: "",
+    video_path: "",
     caption: "",
     time: "",
   });
@@ -109,6 +118,13 @@ export const AddScheduleForm = ({ onScheduleAdded, refreshGroupNames }: AddSched
           ...imageForm,
           time: imageForm.time.replace("T", " ")
         };
+      } else if (activeTab === "video") {
+        newScheduleTime = videoForm.time;
+        newSchedule = {
+          type: "video",
+          ...videoForm,
+          time: videoForm.time.replace("T", " ")
+        };
       } else {
         newScheduleTime = pollForm.time;
         newSchedule = {
@@ -155,6 +171,7 @@ export const AddScheduleForm = ({ onScheduleAdded, refreshGroupNames }: AddSched
       // Reset forms
       setMessageForm({ group_name: "", message: "", time: "" });
       setImageForm({ group_name: "", image_path: "", caption: "", time: "" });
+      setVideoForm({ group_name: "", video_path: "", caption: "", time: "" });
       setPollForm({ group_name: "", question: "", options: "", allow_multiple: false, time: "" });
     } catch (error) {
       toast({ title: "Failed to add schedule", variant: "destructive" });
@@ -189,6 +206,13 @@ export const AddScheduleForm = ({ onScheduleAdded, refreshGroupNames }: AddSched
         baseTime = imageForm.time;
         if (!imageForm.image_path.trim()) {
           toast({ title: "Image path is required", variant: "destructive" });
+          setLoading(false);
+          return;
+        }
+      } else if (activeTab === "video") {
+        baseTime = videoForm.time;
+        if (!videoForm.video_path.trim()) {
+          toast({ title: "Video path is required", variant: "destructive" });
           setLoading(false);
           return;
         }
@@ -235,6 +259,15 @@ export const AddScheduleForm = ({ onScheduleAdded, refreshGroupNames }: AddSched
             time: scheduleTime,
             batch_id: batchId
           };
+        } else if (activeTab === "video") {
+          newSchedule = {
+            type: "video",
+            group_name: selectedGroups[i],
+            video_path: videoForm.video_path,
+            caption: videoForm.caption,
+            time: scheduleTime,
+            batch_id: batchId
+          };
         } else {
           newSchedule = {
             type: "poll",
@@ -265,6 +298,7 @@ export const AddScheduleForm = ({ onScheduleAdded, refreshGroupNames }: AddSched
       // Reset forms and selections
       setMessageForm({ group_name: "", message: "", time: "" });
       setImageForm({ group_name: "", image_path: "", caption: "", time: "" });
+      setVideoForm({ group_name: "", video_path: "", caption: "", time: "" });
       setPollForm({ group_name: "", question: "", options: "", allow_multiple: false, time: "" });
       setSelectedGroups([]);
       setMultiGroupMode(false);
@@ -312,6 +346,43 @@ export const AddScheduleForm = ({ onScheduleAdded, refreshGroupNames }: AddSched
     }
   };
 
+  const handleVideoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      // Upload the file to the backend
+      const formData = new FormData();
+      formData.append("file", file);
+
+      toast({ title: "Uploading video...", description: file.name });
+
+      const response = await fetch(`${API_BASE}/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const data = await response.json();
+
+      // Use the real absolute path returned by the server
+      setVideoForm({ ...videoForm, video_path: data.path });
+      toast({
+        title: "Video uploaded successfully",
+        description: `Saved to: ${data.path}`
+      });
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "Could not upload video to server",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <Card className="shadow-[var(--shadow-card)]">
       <CardHeader>
@@ -343,7 +414,7 @@ export const AddScheduleForm = ({ onScheduleAdded, refreshGroupNames }: AddSched
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="message">
               <MessageSquare className="h-4 w-4 mr-2" />
               Text
@@ -351,6 +422,10 @@ export const AddScheduleForm = ({ onScheduleAdded, refreshGroupNames }: AddSched
             <TabsTrigger value="image">
               <Image className="h-4 w-4 mr-2" />
               Image
+            </TabsTrigger>
+            <TabsTrigger value="video">
+              <Video className="h-4 w-4 mr-2" />
+              Video
             </TabsTrigger>
             <TabsTrigger value="poll">
               <BarChart3 className="h-4 w-4 mr-2" />
@@ -597,6 +672,140 @@ export const AddScheduleForm = ({ onScheduleAdded, refreshGroupNames }: AddSched
                 type="datetime-local"
                 value={imageForm.time}
                 onChange={(e) => setImageForm({ ...imageForm, time: e.target.value })}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="video" className="space-y-4">
+            {multiGroupMode ? (
+              <div className="space-y-2">
+                <Label>Select Groups</Label>
+                {groupNames.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No groups available. Add groups first.</p>
+                ) : (
+                  <div className="border rounded-md p-3 space-y-2 max-h-[200px] overflow-y-auto">
+                    {groupNames.map((name) => (
+                      <div key={name} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`video-multi-${name}`}
+                          checked={selectedGroups.includes(name)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedGroups([...selectedGroups, name]);
+                            } else {
+                              setSelectedGroups(selectedGroups.filter((g) => g !== name));
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor={`video-multi-${name}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        >
+                          {name}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {selectedGroups.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {selectedGroups.length} group{selectedGroups.length !== 1 ? 's' : ''} selected
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label>Group Name</Label>
+                <Popover open={openVideoGroup} onOpenChange={setOpenVideoGroup}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={openVideoGroup}
+                      className="w-full justify-between"
+                    >
+                      {videoForm.group_name || "Select or type group name..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0">
+                    <Command>
+                      <CommandInput
+                        placeholder="Search or type group name..."
+                        value={videoForm.group_name}
+                        onValueChange={(value) => setVideoForm({ ...videoForm, group_name: value })}
+                      />
+                      <CommandList>
+                        <CommandEmpty>
+                          <div className="p-2 text-sm text-muted-foreground">
+                            Type to enter custom group name
+                          </div>
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {groupNames.map((name) => (
+                            <CommandItem
+                              key={name}
+                              value={name}
+                              onSelect={(currentValue) => {
+                                setVideoForm({ ...videoForm, group_name: currentValue });
+                                setOpenVideoGroup(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  videoForm.group_name === name ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label>Video Path</Label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="/path/to/video.mp4"
+                  value={videoForm.video_path}
+                  onChange={(e) => setVideoForm({ ...videoForm, video_path: e.target.value })}
+                />
+                <input
+                  ref={videoInputRef}
+                  type="file"
+                  accept="video/*"
+                  onChange={handleVideoSelect}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => videoInputRef.current?.click()}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Browse
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Caption (optional)</Label>
+              <Input
+                placeholder="Caption for the video"
+                value={videoForm.caption}
+                onChange={(e) => setVideoForm({ ...videoForm, caption: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Time</Label>
+              <Input
+                type="datetime-local"
+                value={videoForm.time}
+                onChange={(e) => setVideoForm({ ...videoForm, time: e.target.value })}
               />
             </div>
           </TabsContent>
