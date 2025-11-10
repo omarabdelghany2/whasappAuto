@@ -72,6 +72,42 @@ class WhatsAppBot:
         options.add_argument("--no-default-browser-check")
         options.add_argument("--disable-popup-blocking")
 
+        # Performance optimizations (especially for Windows)
+        options.add_argument("--disable-extensions")
+        options.add_argument("--disable-gpu")  # Helps on Windows
+        options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
+        options.add_argument("--disable-software-rasterizer")
+        options.add_argument("--no-sandbox")  # Can help with startup speed
+        options.add_argument("--disable-web-security")  # Faster startup
+        options.add_argument("--disable-features=VizDisplayCompositor")
+        options.add_argument("--disable-logging")
+        options.add_argument("--disable-permissions-api")
+        options.add_argument("--disable-notifications")
+        options.add_argument("--disable-background-timer-throttling")
+        options.add_argument("--disable-backgrounding-occluded-windows")
+        options.add_argument("--disable-renderer-backgrounding")
+        options.add_argument("--disable-background-networking")
+        options.add_argument("--disable-default-apps")
+        options.add_argument("--disable-sync")
+        options.add_argument("--metrics-recording-only")
+        options.add_argument("--mute-audio")
+        options.add_argument("--no-default-browser-check")
+        options.add_argument("--no-first-run")
+        options.add_argument("--disable-hang-monitor")
+        options.add_argument("--disable-prompt-on-repost")
+        options.add_argument("--disable-domain-reliability")
+        options.add_argument("--disable-component-update")
+
+        # Set page load strategy to eager for faster startup
+        options.page_load_strategy = 'eager'
+
+        # Disable images and CSS for even faster loading (optional - uncomment if needed)
+        # prefs = {
+        #     "profile.managed_default_content_settings.images": 2,
+        #     "profile.managed_default_content_settings.stylesheets": 2
+        # }
+        # options.add_experimental_option("prefs", prefs)
+
         if self.headless:
             options.add_argument("--headless")
 
@@ -85,12 +121,12 @@ class WhatsAppBot:
             if not os.access(driver_path, os.X_OK) or 'THIRD_PARTY' in driver_path:
                 # Find the actual chromedriver executable
                 driver_dir = os.path.dirname(driver_path)
-                for root, dirs, files in os.walk(driver_dir):
+                for root, _, files in os.walk(driver_dir):
                     for file in files:
-                        if file == 'chromedriver':
+                        if file == 'chromedriver' or file == 'chromedriver.exe':
                             driver_path = os.path.join(root, file)
                             break
-                    if os.path.basename(driver_path) == 'chromedriver':
+                    if os.path.basename(driver_path).startswith('chromedriver'):
                         break
 
             service = Service(driver_path)
