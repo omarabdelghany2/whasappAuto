@@ -101,6 +101,9 @@ class WhatsAppBot:
         # Set page load strategy to eager for faster startup
         options.page_load_strategy = 'eager'
 
+        # Start minimized (works better than headless for WhatsApp Web)
+        options.add_argument("--start-minimized")
+
         # Disable images and CSS for even faster loading (optional - uncomment if needed)
         # prefs = {
         #     "profile.managed_default_content_settings.images": 2,
@@ -137,7 +140,8 @@ class WhatsAppBot:
             # Fallback: let Selenium find the driver automatically
             self.driver = webdriver.Chrome(options=options)
 
-        self.driver.maximize_window()
+        # Don't maximize window - let it start minimized
+        # self.driver.maximize_window()
 
         # Open WhatsApp Web
         logger.info("Opening WhatsApp Web...")
