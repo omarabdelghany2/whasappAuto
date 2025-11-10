@@ -116,6 +116,26 @@ class ProcessManager:
         print_success("All processes stopped. Goodbye!")
         sys.exit(0)
 
+    def cleanup_old_processes(self):
+        """Kill any old processes that might be running on our ports"""
+        print_info("Cleaning up old processes...")
+
+        if self.system == 'Windows':
+            # Kill processes on ports 8000 and 5173
+            subprocess.run('FOR /F "tokens=5" %P IN (\'netstat -ano ^| findstr :8000\') DO taskkill /F /PID %P 2>nul',
+                         shell=True, capture_output=True)
+            subprocess.run('FOR /F "tokens=5" %P IN (\'netstat -ano ^| findstr :5173\') DO taskkill /F /PID %P 2>nul',
+                         shell=True, capture_output=True)
+        else:
+            # Kill processes on ports 8000 and 5173 (macOS/Linux)
+            subprocess.run("lsof -ti:8000 | xargs kill -9 2>/dev/null || true", shell=True, capture_output=True)
+            subprocess.run("lsof -ti:5173 | xargs kill -9 2>/dev/null || true", shell=True, capture_output=True)
+            subprocess.run("pkill -f 'uvicorn server:app' 2>/dev/null || true", shell=True, capture_output=True)
+            subprocess.run("pkill -f 'vite' 2>/dev/null || true", shell=True, capture_output=True)
+
+        # Give processes time to clean up
+        time.sleep(1)
+
     def check_dependencies(self):
         """Check if required dependencies are installed"""
         print_info("Checking dependencies...")
@@ -305,6 +325,9 @@ def main():
     signal.signal(signal.SIGINT, manager.cleanup)
     if hasattr(signal, 'SIGTERM'):
         signal.signal(signal.SIGTERM, manager.cleanup)
+
+    # Clean up any old processes first
+    manager.cleanup_old_processes()
 
     # Check dependencies
     if not manager.check_dependencies():

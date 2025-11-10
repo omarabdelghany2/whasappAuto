@@ -45,13 +45,32 @@ class WhatsAppBot:
         logger.info("Starting WhatsApp bot...")
 
         options = webdriver.ChromeOptions()
+
         # Use custom profile if provided, otherwise use default ./chrome_data
-        user_data_dir = profile_path if profile_path else "./chrome_data"
+        import os
+        if profile_path:
+            user_data_dir = os.path.abspath(profile_path)
+        else:
+            user_data_dir = os.path.abspath("./chrome_data")
+
+        # Create directory if it doesn't exist
+        os.makedirs(user_data_dir, exist_ok=True)
+
         options.add_argument(f"--user-data-dir={user_data_dir}")
         logger.info(f"Using Chrome profile: {user_data_dir}")
+
+        # Fix for "DevTools remote debugging requires a non-default data directory"
+        options.add_argument("--remote-debugging-port=9222")
+
+        # Disable automation detection
         options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
         options.add_experimental_option('useAutomationExtension', False)
+
+        # Additional options to prevent errors
+        options.add_argument("--no-first-run")
+        options.add_argument("--no-default-browser-check")
+        options.add_argument("--disable-popup-blocking")
 
         if self.headless:
             options.add_argument("--headless")

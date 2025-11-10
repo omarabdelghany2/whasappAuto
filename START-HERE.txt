@@ -33,7 +33,8 @@ Welcome! This app helps you automatically send WhatsApp messages.
 
    📁 Windows/
       ├── 1-INSTALL.bat  ← Double-click to install
-      └── 2-START.bat    ← Double-click to start
+      ├── 2-START.bat    ← Double-click to start
+      └── FIX-PATH.bat   ← If you get "pipenv not recognized" error
 
    📁 Mac/
       ├── 1-INSTALL.command  ← Double-click to install
@@ -45,38 +46,39 @@ Welcome! This app helps you automatically send WhatsApp messages.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚠️  BEFORE INSTALLING:
+⚠️  NEW! AUTOMATIC INSTALLATION:
 
-   You need these 3 free programs installed first:
+   The installer will now AUTOMATICALLY install everything:
 
-   1. Python 3       → https://www.python.org/downloads/
-      (Windows users: Check "Add Python to PATH" during install!)
+   ✓ Python 3 (if missing)
+   ✓ Node.js (if missing)
+   ✓ Google Chrome (if missing)
+   ✓ All app dependencies
 
-   2. Node.js        → https://nodejs.org/
-      (Choose the LTS version)
+   Just double-click the install file and follow the prompts!
 
-   3. Google Chrome  → https://www.google.com/chrome/
-
-   The install file will check these and guide you if missing!
+   Mac: May ask for your password (normal for installing software)
+   Linux: Will ask for sudo password (normal)
+   Windows: May ask to "Run as Administrator" for automatic install
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🚀 COMPLETE WALKTHROUGH:
 
-   1. Install Python, Node.js, and Chrome (links above)
+   1. Open YOUR folder (Windows, Mac, or Linux)
 
-   2. Open YOUR folder (Windows, Mac, or Linux)
-
-   3. Double-click "1-INSTALL" file
-      → Wait 3-5 minutes
+   2. Double-click "1-INSTALL" file
+      → Installer will automatically install Python, Node.js, Chrome
+      → May ask for password/admin rights (normal!)
+      → Wait 5-10 minutes for everything to install
       → See "Installation Complete!" message
 
-   4. Double-click "2-START" file
+   3. Double-click "2-START" file
       → Wait 10 seconds
       → Browser opens automatically
       → Use the app!
 
-   5. To stop: Press Ctrl+C in the window
+   4. To stop: Press Ctrl+C in the window
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
