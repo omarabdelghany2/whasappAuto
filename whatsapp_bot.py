@@ -143,6 +143,10 @@ class WhatsAppBot:
         # Don't maximize window - let it start minimized
         # self.driver.maximize_window()
 
+        # Minimize the window immediately after opening
+        self.driver.minimize_window()
+        logger.info("Browser window minimized")
+
         # Open WhatsApp Web
         logger.info("Opening WhatsApp Web...")
         self.driver.get("https://web.whatsapp.com")
