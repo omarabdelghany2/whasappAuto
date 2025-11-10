@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -526,10 +527,16 @@ export const AddScheduleForm = ({ onScheduleAdded, refreshGroupNames }: AddSched
             )}
             <div className="space-y-2">
               <Label>Message</Label>
-              <Input
+              <Textarea
                 placeholder="Good morning!"
                 value={messageForm.message}
-                onChange={(e) => setMessageForm({ ...messageForm, message: e.target.value })}
+                onChange={(e) => {
+                  setMessageForm({ ...messageForm, message: e.target.value });
+                  // Auto-resize textarea
+                  e.target.style.height = 'auto';
+                  e.target.style.height = e.target.scrollHeight + 'px';
+                }}
+                className="min-h-[80px] max-h-[300px] resize-none overflow-y-auto"
               />
             </div>
             <div className="space-y-2">
@@ -660,10 +667,16 @@ export const AddScheduleForm = ({ onScheduleAdded, refreshGroupNames }: AddSched
             </div>
             <div className="space-y-2">
               <Label>Caption (optional)</Label>
-              <Input
+              <Textarea
                 placeholder="Caption for the image"
                 value={imageForm.caption}
-                onChange={(e) => setImageForm({ ...imageForm, caption: e.target.value })}
+                onChange={(e) => {
+                  setImageForm({ ...imageForm, caption: e.target.value });
+                  // Auto-resize textarea
+                  e.target.style.height = 'auto';
+                  e.target.style.height = e.target.scrollHeight + 'px';
+                }}
+                className="min-h-[60px] max-h-[200px] resize-none overflow-y-auto"
               />
             </div>
             <div className="space-y-2">
@@ -794,10 +807,16 @@ export const AddScheduleForm = ({ onScheduleAdded, refreshGroupNames }: AddSched
             </div>
             <div className="space-y-2">
               <Label>Caption (optional)</Label>
-              <Input
+              <Textarea
                 placeholder="Caption for the video"
                 value={videoForm.caption}
-                onChange={(e) => setVideoForm({ ...videoForm, caption: e.target.value })}
+                onChange={(e) => {
+                  setVideoForm({ ...videoForm, caption: e.target.value });
+                  // Auto-resize textarea
+                  e.target.style.height = 'auto';
+                  e.target.style.height = e.target.scrollHeight + 'px';
+                }}
+                className="min-h-[60px] max-h-[200px] resize-none overflow-y-auto"
               />
             </div>
             <div className="space-y-2">

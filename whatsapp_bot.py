@@ -1,5 +1,8 @@
 import time
 import logging
+import os
+import sys
+import pyperclip
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -9,16 +12,32 @@ from selenium.webdriver.chrome.service import Service
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from webdriver_manager.chrome import ChromeDriverManager
 
+# Configure logging with UTF-8 encoding for emoji and RTL support
+
+# Create file handler with UTF-8 encoding
+file_handler = logging.FileHandler('whatsapp_bot.log', encoding='utf-8')
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+
+# Create stream handler with UTF-8 encoding
+stream_handler = logging.StreamHandler(sys.stdout)
+stream_handler.setLevel(logging.INFO)
+stream_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('whatsapp_bot.log'),
-        logging.StreamHandler()
-    ]
+    handlers=[file_handler, stream_handler]
 )
 logger = logging.getLogger(__name__)
+
+# Set console to UTF-8 mode on Windows
+if sys.platform == 'win32':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except:
+        pass
 
 
 class WhatsAppBot:
@@ -203,7 +222,6 @@ class WhatsAppBot:
         options = webdriver.ChromeOptions()
 
         # Use custom profile if provided, otherwise use default ./chrome_data
-        import os
         if profile_path:
             user_data_dir = os.path.abspath(profile_path)
         else:
@@ -220,7 +238,7 @@ class WhatsAppBot:
 
         # Disable automation detection
         options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
         options.add_experimental_option('useAutomationExtension', False)
 
         # Additional options to prevent errors
@@ -254,6 +272,19 @@ class WhatsAppBot:
         options.add_argument("--disable-domain-reliability")
         options.add_argument("--disable-component-update")
 
+        # Suppress verbose logging and errors
+        options.add_argument("--log-level=3")  # Only show fatal errors
+        options.add_argument("--silent")
+
+        # Suppress GPU errors
+        options.add_argument("--disable-gpu-sandbox")
+        options.add_argument("--disable-accelerated-2d-canvas")
+        options.add_argument("--disable-3d-apis")
+
+        # Suppress GCM/sync errors
+        options.add_argument("--disable-sync")
+        options.add_argument("--disable-background-networking")
+
         # Set page load strategy to eager for faster startup
         options.page_load_strategy = 'eager'
 
@@ -270,7 +301,6 @@ class WhatsAppBot:
         # Initialize the driver
         try:
             # Try to get the chromedriver path and fix if needed
-            import os
             driver_path = ChromeDriverManager().install()
 
             # Check if path points to wrong file and fix it
@@ -285,13 +315,15 @@ class WhatsAppBot:
                     if os.path.basename(driver_path).startswith('chromedriver'):
                         break
 
-            service = Service(driver_path)
+            # Suppress ChromeDriver logs
+            service = Service(driver_path, log_output=os.devnull)
             self.driver = webdriver.Chrome(service=service, options=options)
         except Exception as e:
             logger.warning(f"ChromeDriverManager failed: {str(e)}")
             logger.info("Trying to use system Chrome without explicit driver path...")
             # Fallback: let Selenium find the driver automatically
-            self.driver = webdriver.Chrome(options=options)
+            service = Service(log_output=os.devnull)
+            self.driver = webdriver.Chrome(service=service, options=options)
 
         self.driver.maximize_window()
 
@@ -337,16 +369,60 @@ class WhatsAppBot:
                 EC.presence_of_element_located((By.XPATH, '//div[@contenteditable="true"][@data-tab="3"]'))
             )
 
+            # First, try to click the clear button (X) if it exists
+            try:
+                clear_button = self.driver.find_element(By.XPATH, '//button[@aria-label="Cancel search"]')
+                clear_button.click()
+                time.sleep(0.3)
+                logger.info("Cleared search box using X button")
+            except:
+                pass
+
             # Click and clear the search box
             search_box.click()
-            time.sleep(0.3)  # Reduced from 1s
-            search_box.clear()
+            time.sleep(0.3)
 
-            # Type the group name
-            search_box.send_keys(group_name)
+            # Multi-method clearing for reliability with RTL text and emojis
+            # Method 1: JavaScript clear (most reliable)
+            self.driver.execute_script("""
+                var element = arguments[0];
+                element.textContent = '';
+                element.innerHTML = '';
+                element.innerText = '';
+                if (element.value !== undefined) element.value = '';
+                // Trigger input event to notify React/Angular
+                var event = new Event('input', { bubbles: true });
+                element.dispatchEvent(event);
+            """, search_box)
+            time.sleep(0.2)
 
-            # Wait for search results to appear (smarter than fixed sleep)
-            time.sleep(0.5)  # Reduced from 2s
+            # Method 2: Select all and delete
+            search_box.send_keys(Keys.CONTROL + "a")
+            time.sleep(0.1)
+            search_box.send_keys(Keys.BACK_SPACE)
+            time.sleep(0.1)
+
+            # Method 3: Clear any remaining content
+            for _ in range(3):  # Try clearing multiple times
+                search_box.send_keys(Keys.BACK_SPACE)
+            time.sleep(0.2)
+
+            # Verify search box is empty
+            current_text = self.driver.execute_script("return arguments[0].textContent;", search_box)
+            logger.info(f"Search box content after clearing: '{current_text}'")
+
+            # Copy group name to clipboard and paste (supports all Unicode)
+            pyperclip.copy(group_name)
+            time.sleep(0.2)
+
+            # Paste using Ctrl+V
+            search_box.send_keys(Keys.CONTROL, 'v')
+            time.sleep(0.3)
+
+            logger.info(f"Typed group name using clipboard paste: {group_name}")
+
+            # Wait for search results to appear (longer for complex text)
+            time.sleep(1.5)  # Increased for RTL and emoji handling
 
             # Click on the first result - Try exact match first
             logger.info(f"Clicking on group: {group_name}")
@@ -407,19 +483,20 @@ class WhatsAppBot:
             message_box.click()
             time.sleep(0.5)
 
-            # Type message using bidirectional text support (Arabic/English mix)
-            typed_successfully = self._type_text_bidi(message_box, message)
+            # Copy message to clipboard (supports all Unicode including emojis)
+            pyperclip.copy(message)
+            time.sleep(0.2)
 
-            # If JavaScript method failed, try traditional send_keys with line handling
-            if not typed_successfully:
-                logger.info("Using traditional typing method for multi-line support")
-                lines = message.split('\n')
-                for i, line in enumerate(lines):
-                    message_box.send_keys(line)
-                    if i < len(lines) - 1:
-                        # Send Shift+Enter for new line
-                        message_box.send_keys(Keys.SHIFT + Keys.ENTER)
+            # Paste using Ctrl+V (most reliable method - bypasses BMP limitation)
+            message_box.send_keys(Keys.CONTROL, 'v')
+            time.sleep(1.0)  # Wait for WhatsApp to process the paste
 
+            # Verify message was pasted
+            pasted_text = self.driver.execute_script("return arguments[0].textContent;", message_box)
+            logger.info(f"Message pasted successfully, length: {len(pasted_text)}")
+
+            # Scroll to bottom to show all text
+            self.driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight;", message_box)
             time.sleep(0.5)
 
             # Send the message - Try multiple methods
@@ -574,11 +651,17 @@ class WhatsAppBot:
 
                             # Click and add caption
                             caption_box.click()
-                            time.sleep(0.3)  # Reduced from 0.5s
-                            self._type_text_bidi(caption_box, caption)
+                            time.sleep(0.3)
+
+                            # Use clipboard paste for captions (supports emojis)
+                            pyperclip.copy(caption)
+                            time.sleep(0.1)
+                            caption_box.send_keys(Keys.CONTROL, 'v')
+                            time.sleep(0.3)
+
                             logger.info(f"[OK] Caption added successfully: {caption}")
                             caption_added = True
-                            time.sleep(0.3)  # Reduced from 1s
+                            time.sleep(0.3)
                             break
 
                         except Exception as e:
@@ -769,7 +852,13 @@ class WhatsAppBot:
                             # Click and add caption
                             caption_box.click()
                             time.sleep(0.3)
-                            self._type_text_bidi(caption_box, caption)
+
+                            # Use clipboard paste for captions (supports emojis)
+                            pyperclip.copy(caption)
+                            time.sleep(0.1)
+                            caption_box.send_keys(Keys.CONTROL, 'v')
+                            time.sleep(0.3)
+
                             logger.info(f"[OK] Caption added successfully: {caption}")
                             caption_added = True
                             time.sleep(0.3)

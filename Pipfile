@@ -11,6 +11,7 @@ python-dotenv = "==1.0.0"
 fastapi = "==0.115.0"
 uvicorn = "==0.30.6"
 python-multipart = "*"
+pyperclip = "==1.8.2"
 
 [dev-packages]
 
