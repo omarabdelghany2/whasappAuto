@@ -237,6 +237,22 @@ class MessageScheduler:
             success = self.bot.send_poll_to_group(group_name, question, options, allow_multiple)
             if success:
                 logger.info(f"Scheduled poll sent successfully to '{group_name}'")
+
+                # Check for upcoming schedules BEFORE removing current entry
+                should_close_browser = True
+                try:
+                    if self.bot and self.bot.driver:
+                        # Check for upcoming schedules in the same batch first (within 2 minutes for batch jobs)
+                        if batch_id and self._has_upcoming_schedules(within_minutes=2, batch_id=batch_id):
+                            logger.info(f"Keeping browser open - more schedules in batch '{batch_id}' coming up soon")
+                            should_close_browser = False
+                        elif self._has_upcoming_schedules(within_minutes=10):
+                            logger.info("Keeping browser open - more schedules coming up soon")
+                            should_close_browser = False
+                except Exception as e:
+                    logger.warning(f"Error checking upcoming schedules: {e}")
+
+                # Now mark as done and remove
                 try:
                     entry["status"] = "done"
                     entry["completed_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -254,17 +270,11 @@ class MessageScheduler:
                 except Exception as e:
                     logger.warning(f"Could not mark schedule as done: {e}")
 
-                # Close browser only if no upcoming schedules
+                # Close browser if no upcoming schedules
                 try:
-                    if self.bot and self.bot.driver:
-                        # Check for upcoming schedules in the same batch first (within 2 minutes for batch jobs)
-                        if batch_id and self._has_upcoming_schedules(within_minutes=2, batch_id=batch_id):
-                            logger.info(f"Keeping browser open - more schedules in batch '{batch_id}' coming up soon")
-                        elif self._has_upcoming_schedules(within_minutes=10):
-                            logger.info("Keeping browser open - more schedules coming up soon")
-                        else:
-                            logger.info("Closing browser after successful scheduled job...")
-                            self.bot.close()
+                    if self.bot and self.bot.driver and should_close_browser:
+                        logger.info("Closing browser after successful scheduled job...")
+                        self.bot.close()
                 except Exception as e:
                     logger.warning(f"Error closing browser after scheduled job: {e}")
             else:

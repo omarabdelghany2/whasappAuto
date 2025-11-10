@@ -415,7 +415,7 @@ class WhatsAppBot:
                             caption_box.click()
                             time.sleep(0.3)  # Reduced from 0.5s
                             caption_box.send_keys(caption)
-                            logger.info(f"✓ Caption added successfully: {caption}")
+                            logger.info(f"[OK] Caption added successfully: {caption}")
                             caption_added = True
                             time.sleep(0.3)  # Reduced from 1s
                             break
@@ -609,7 +609,7 @@ class WhatsAppBot:
                             caption_box.click()
                             time.sleep(0.3)
                             caption_box.send_keys(caption)
-                            logger.info(f"✓ Caption added successfully: {caption}")
+                            logger.info(f"[OK] Caption added successfully: {caption}")
                             caption_added = True
                             time.sleep(0.3)
                             break
@@ -844,7 +844,7 @@ class WhatsAppBot:
                             option_boxes[i].click()
                             time.sleep(0.3)
                             option_boxes[i].send_keys(option)
-                            logger.info(f"✓ Option {i+1} entered successfully (method 1)")
+                            logger.info(f"[OK] Option {i+1} entered successfully (method 1)")
                             option_entered = True
                             time.sleep(0.3)
                     except Exception as e:
@@ -860,7 +860,7 @@ class WhatsAppBot:
                             all_textboxes[i + 1].click()
                             time.sleep(0.3)
                             all_textboxes[i + 1].send_keys(option)
-                            logger.info(f"✓ Option {i+1} entered successfully (method 2)")
+                            logger.info(f"[OK] Option {i+1} entered successfully (method 2)")
                             option_entered = True
                             time.sleep(0.3)
                     except Exception as e:
@@ -876,7 +876,7 @@ class WhatsAppBot:
                             copyable_fields[i + 1].click()
                             time.sleep(0.3)
                             copyable_fields[i + 1].send_keys(option)
-                            logger.info(f"✓ Option {i+1} entered successfully (method 3)")
+                            logger.info(f"[OK] Option {i+1} entered successfully (method 3)")
                             option_entered = True
                             time.sleep(0.3)
                     except Exception as e:
