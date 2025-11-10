@@ -135,7 +135,7 @@ export const AddScheduleForm = ({ onScheduleAdded, refreshGroupNames }: AddSched
         };
       }
 
-      // Validate minimum 2-minute gap between schedules
+      // Validate minimum 1-minute gap between schedules
       // Normalize times to ignore seconds
       const newTime = new Date(newScheduleTime);
       newTime.setSeconds(0, 0); // Set seconds and milliseconds to 0
@@ -147,11 +147,11 @@ export const AddScheduleForm = ({ onScheduleAdded, refreshGroupNames }: AddSched
         const existingTimeMs = existingTime.getTime();
         const timeDiffMinutes = Math.abs(newTimeMs - existingTimeMs) / (1000 * 60);
 
-        if (timeDiffMinutes < 2) {
-          const minutesNeeded = (2 - timeDiffMinutes).toFixed(1);
+        if (timeDiffMinutes < 1) {
+          const secondsNeeded = ((1 - timeDiffMinutes) * 60).toFixed(0);
           toast({
             title: "Schedule too close",
-            description: `Minimum time between schedules is 2 minutes. This schedule is ${minutesNeeded} minute(s) too close to another schedule at ${schedule.time}.`,
+            description: `Minimum time between schedules is 1 minute. This schedule is ${secondsNeeded} second(s) too close to another schedule at ${schedule.time}.`,
             variant: "destructive"
           });
           setLoading(false);
@@ -229,9 +229,9 @@ export const AddScheduleForm = ({ onScheduleAdded, refreshGroupNames }: AddSched
       // Generate unique batch ID for this multi-group send
       const batchId = `batch_${Date.now()}`;
 
-      // Create a schedule for each selected group with 2-minute intervals
+      // Create a schedule for each selected group with 1-minute intervals
       for (let i = 0; i < selectedGroups.length; i++) {
-        const scheduleTimeMs = baseTimeMs + (i * 2 * 60 * 1000); // Add 2 minutes per group
+        const scheduleTimeMs = baseTimeMs + (i * 60 * 1000); // Add 60 seconds (1 minute) per group
         const scheduleDate = new Date(scheduleTimeMs);
         // Format as local time, not UTC
         const year = scheduleDate.getFullYear();
@@ -291,7 +291,7 @@ export const AddScheduleForm = ({ onScheduleAdded, refreshGroupNames }: AddSched
 
       toast({
         title: `${selectedGroups.length} schedules added successfully`,
-        description: `Scheduled at 2-minute intervals starting from ${new Date(baseTime).toLocaleString()}`
+        description: `Scheduled at 1 minute intervals starting from ${new Date(baseTime).toLocaleString()}`
       });
       onScheduleAdded();
 
@@ -395,7 +395,7 @@ export const AddScheduleForm = ({ onScheduleAdded, refreshGroupNames }: AddSched
           </div>
           <div className="flex items-center justify-between">
             <CardDescription>
-              {multiGroupMode ? "Select multiple groups - schedules will be 2 minutes apart" : "Schedule a new WhatsApp message, image, or poll"}
+              {multiGroupMode ? "Select multiple groups - schedules will be 1 minute apart" : "Schedule a new WhatsApp message, image, video, or poll"}
             </CardDescription>
             <Button
               variant={multiGroupMode ? "default" : "outline"}

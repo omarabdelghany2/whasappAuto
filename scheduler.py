@@ -647,7 +647,12 @@ class MessageScheduler:
         def loop():
             logger.info("Scheduler background thread started")
             while not self._stop_event.is_set():
-                schedule.run_pending()
+                try:
+                    schedule.run_pending()
+                except Exception as e:
+                    logger.error(f"Error running scheduled job: {str(e)}")
+                    import traceback
+                    traceback.print_exc()
                 time.sleep(1)
             logger.info("Scheduler background thread stopped")
 
@@ -724,31 +729,42 @@ class MessageScheduler:
             needs_start = False
             if getattr(self.bot, 'driver', None) is None:
                 needs_start = True
+                logger.info("Browser not started yet, will start now...")
             else:
                 try:
                     # Touch driver to ensure it's alive
                     _ = self.bot.driver.current_url  # may raise if closed
-                except Exception:
+                    logger.info("Browser is already running and alive")
+                except Exception as e:
                     needs_start = True
+                    logger.info(f"Browser was closed or crashed, will restart: {e}")
             if needs_start:
                 # Get the profile path from chrome_profiles module
                 profile_path = None
                 if profile_name:
-                    from chrome_profiles import list_chrome_profiles
-                    profiles = list_chrome_profiles()
-                    for profile in profiles:
-                        if profile.get('name') == profile_name:
-                            profile_path = profile.get('path')
-                            logger.info(f"Using Chrome profile '{profile_name}' at: {profile_path}")
-                            break
-                    if not profile_path:
-                        logger.warning(f"Chrome profile '{profile_name}' not found, using default")
+                    try:
+                        from chrome_profiles import list_chrome_profiles
+                        profiles = list_chrome_profiles()
+                        for profile in profiles:
+                            if profile.get('name') == profile_name:
+                                profile_path = profile.get('path')
+                                logger.info(f"Using Chrome profile '{profile_name}' at: {profile_path}")
+                                break
+                        if not profile_path:
+                            logger.warning(f"Chrome profile '{profile_name}' not found, using default")
+                    except ImportError:
+                        logger.info("chrome_profiles module not available, using default profile")
 
                 logger.info("Starting WhatsApp bot for scheduled job...")
                 self.bot.start(profile_path=profile_path)
+                logger.info("Waiting for WhatsApp Web to load...")
                 self.bot.wait_for_whatsapp_load(timeout=180)
+                logger.info("WhatsApp Web loaded successfully!")
         except Exception as e:
             logger.error(f"Failed to prepare WhatsApp bot: {e}")
+            import traceback
+            traceback.print_exc()
+            raise  # Re-raise the exception so the job knows it failed
 
 
 if __name__ == "__main__":
