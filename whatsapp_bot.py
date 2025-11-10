@@ -35,28 +35,115 @@ class WhatsAppBot:
         self.headless = headless
         self.wait_time = 10  # Reduced from 30 for faster operations
 
+    def _convert_emoji_shortcuts(self, text):
+        """
+        Convert emoji shortcuts to actual emojis.
+        Supports both [brackets] format and :colon: format (WhatsApp style).
+        """
+        # Define emojis (will be used for both formats)
+        emoji_data = {
+            'smile': '😊', 'happy': '😊', 'grin': '😁',
+            'laugh': '😂', 'lol': '😂', 'rofl': '🤣', 'joy': '😂',
+            'love': '❤️', 'heart': '❤️', 'hearts': '💕',
+            'kiss': '😘', 'wink': '😉', 'blush': '😊',
+            'yay': '🎉', 'party': '🎉', 'celebrate': '🎉',
+            'tada': '🎉', 'confetti': '🎊',
+            'cool': '😎', 'sunglasses': '😎',
+            'fire': '🔥', 'hot': '🔥', 'lit': '🔥',
+            'star': '⭐', 'stars': '✨', 'sparkle': '✨', 'sparkles': '✨',
+            'thumbsup': '👍', 'thumbup': '👍', 'like': '👍', '+1': '👍',
+            'thumbsdown': '👎', 'thumbdown': '👎', 'dislike': '👎', '-1': '👎',
+            'ok': '👌', 'perfect': '👌', 'ok_hand': '👌',
+            'clap': '👏', 'applause': '👏',
+            'pray': '🙏', 'thanks': '🙏', 'thank you': '🙏', 'please': '🙏',
+            'muscle': '💪', 'strong': '💪', 'flex': '💪',
+            'think': '🤔', 'thinking': '🤔',
+            'sad': '😢', 'cry': '😢', 'tears': '😭', 'sob': '😭',
+            'angry': '😠', 'mad': '😡', 'rage': '😡',
+            'surprised': '😮', 'shock': '😲', 'wow': '😮',
+            'sleep': '😴', 'sleeping': '😴', 'zzz': '💤', 'sleepy': '😴',
+            'sick': '🤒', 'ill': '🤕',
+            'check': '✅', 'done': '✅', 'yes': '✅', 'correct': '✅',
+            'x': '❌', 'no': '❌', 'cross': '❌', 'wrong': '❌',
+            'warning': '⚠️', 'alert': '⚠️',
+            'question': '❓', '?': '❓',
+            'exclamation': '❗', '!': '❗', 'bang': '❗',
+            'sun': '☀️', 'sunny': '☀️',
+            'moon': '🌙', 'night': '🌙',
+            'cloud': '☁️', 'rain': '🌧️',
+            'snow': '❄️', 'snowflake': '❄️',
+            'tree': '🌲', 'plant': '🌱', 'flower': '🌸',
+            'cake': '🎂', 'birthday': '🎂',
+            'gift': '🎁', 'present': '🎁',
+            'pizza': '🍕', 'burger': '🍔', 'coffee': '☕',
+            'beer': '🍺', 'wine': '🍷', 'cheers': '🥂',
+            'car': '🚗', 'airplane': '✈️', 'rocket': '🚀',
+            'home': '🏠', 'house': '🏠',
+            'phone': '📱', 'mobile': '📱', 'iphone': '📱',
+            'computer': '💻', 'laptop': '💻',
+            'money': '💰', 'dollar': '💵', 'cash': '💵',
+            'trophy': '🏆', 'medal': '🏅', 'winner': '🏆',
+            'music': '🎵', 'note': '🎵', 'notes': '🎶',
+            'camera': '📷', 'photo': '📸',
+            'book': '📖', 'books': '📚',
+            'pen': '✒️', 'pencil': '✏️',
+            'flag': '🚩', 'redflag': '🚩',
+            'wave': '👋', 'hi': '👋', 'bye': '👋',
+            'eyes': '👀', 'see': '👀',
+            '100': '💯', 'hundred': '💯',
+        }
+
+        result = text
+
+        # Process each emoji shortcut
+        for name, emoji in emoji_data.items():
+            # Support both formats: [name] and :name:
+            bracket_format = f'[{name}]'
+            colon_format = f':{name}:'
+
+            # Case-insensitive replacement for both formats
+            for shortcut in [bracket_format, colon_format]:
+                result = result.replace(shortcut, emoji)
+                result = result.replace(shortcut.upper(), emoji)
+                result = result.replace(shortcut.title(), emoji)
+                # Also handle Title Case for multi-word (e.g., [Thank You])
+                if ' ' in name:
+                    title_shortcut = f'[{name.title()}]' if '[' in shortcut else f':{name.title()}:'
+                    result = result.replace(title_shortcut, emoji)
+
+        return result
+
     def _type_text_bidi(self, element, text):
         """
-        Type text that may contain mixed RTL/LTR content (Arabic/English).
+        Type text that may contain mixed RTL/LTR content (Arabic/English/Emojis).
         Uses JavaScript for proper bidirectional text handling.
+        Converts emoji shortcuts like [smile] to actual emojis.
 
         Args:
             element: WebElement to type into
-            text (str): Text to type (can be mixed Arabic/English)
+            text (str): Text to type (can be mixed Arabic/English/Emojis/Shortcuts)
 
         Returns:
             bool: True if successful, False if failed
         """
+        # Convert emoji shortcuts first
+        text = self._convert_emoji_shortcuts(text)
         try:
-            logger.info(f"Attempting to type text: {text[:50]}...")
+            # Safely log text (handle emojis)
+            try:
+                log_text = text[:50] if len(text) > 50 else text
+                logger.info(f"Attempting to type text: {log_text}...")
+            except:
+                logger.info(f"Attempting to type text with special characters...")
 
             # Use JavaScript to insert text properly with multiple events for WhatsApp
+            # This handles emojis, RTL/LTR text, and special characters
             script = """
             var element = arguments[0];
             var text = arguments[1];
             element.focus();
 
-            // Set the text content directly
+            // Set the text content directly (handles emojis properly)
             element.textContent = text;
 
             // Trigger multiple events that WhatsApp listens for
@@ -76,7 +163,13 @@ class WhatsAppBot:
             return element.textContent;
             """
             result = self.driver.execute_script(script, element, text)
-            logger.info(f"JavaScript typing succeeded. Content in box: {result[:50] if result else 'EMPTY'}...")
+
+            # Safely log result
+            try:
+                result_log = result[:50] if result and len(result) > 50 else result
+                logger.info(f"JavaScript typing succeeded. Content in box: {result_log if result else 'EMPTY'}...")
+            except:
+                logger.info(f"JavaScript typing succeeded. Content has special characters...")
 
             # Verify text was actually set
             if result and len(result) > 0:
@@ -84,18 +177,18 @@ class WhatsAppBot:
             else:
                 logger.warning("JavaScript set text but element is empty, trying send_keys")
                 element.send_keys(text)
-                logger.info(f"Text typed using send_keys fallback: {text[:50]}...")
+                logger.info(f"Text typed using send_keys fallback")
                 return True
 
         except Exception as e:
-            logger.error(f"JavaScript typing failed with error: {e}")
+            logger.error(f"JavaScript typing failed with error: {str(e)}")
             logger.info("Trying send_keys as fallback...")
             try:
                 element.send_keys(text)
-                logger.info(f"Text typed using send_keys fallback: {text[:50]}...")
+                logger.info(f"Text typed using send_keys fallback")
                 return True
             except Exception as e2:
-                logger.error(f"send_keys also failed: {e2}")
+                logger.error(f"send_keys also failed: {str(e2)}")
                 return False
 
     def start(self, profile_path: str = None):

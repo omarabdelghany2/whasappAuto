@@ -440,5 +440,31 @@
     "batch_id": null,
     "completed_at": "2025-11-10 16:42:39",
     "time": "2025-11-10 16:41"
+  },
+  {
+    "group_name": "Omar abdelghany",
+    "message": "hello [Yay]",
+    "scheduled_time": "2025-11-10 17:16",
+    "repeat": "once",
+    "created_at": "2025-11-10 17:16:26",
+    "type": "message",
+    "status": "done",
+    "profile_name": null,
+    "batch_id": null,
+    "completed_at": "2025-11-10 17:17:08",
+    "time": "2025-11-10 17:16"
+  },
+  {
+    "group_name": "Omar abdelghany",
+    "message": "مرحبا [smile] كيف حالك اليوم [sun]",
+    "scheduled_time": "2025-11-10 17:21",
+    "repeat": "once",
+    "created_at": "2025-11-10 17:21:11",
+    "type": "message",
+    "status": "done",
+    "profile_name": null,
+    "batch_id": null,
+    "completed_at": "2025-11-10 17:21:55",
+    "time": "2025-11-10 17:21"
   }
 ]
