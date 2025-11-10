@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"1-INSTALL.bat\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

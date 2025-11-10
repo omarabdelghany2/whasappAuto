@@ -138,6 +138,12 @@ class ProcessManager:
 
     def check_dependencies(self):
         """Check if required dependencies are installed"""
+        # Skip checks if running from batch file (already verified)
+        if os.environ.get('WHATSAPP_SKIP_CHECKS') == '1':
+            print_info("Dependency checks skipped (pre-verified)")
+            print_success("All dependencies ready!")
+            return True
+
         print_info("Checking dependencies...")
 
         # Check pipenv

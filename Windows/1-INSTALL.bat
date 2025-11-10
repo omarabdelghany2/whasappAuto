@@ -225,30 +225,59 @@ if %errorlevel% equ 0 (
 echo Installing pipenv...
 python -m pip install --user pipenv
 
-REM Determine Python Scripts path
-for /f "tokens=*" %%i in ('python -c "import site; print(site.USER_SITE)"') do set USER_SITE=%%i
-set SCRIPTS_PATH=%USER_SITE%\..\Scripts
+REM Determine Python Scripts path more reliably
+for /f "tokens=*" %%i in ('python -c "import sysconfig; print(sysconfig.get_path('scripts', 'nt_user'))"') do set SCRIPTS_PATH=%%i
 
-REM Add pipenv to PATH permanently for the current user
-echo Adding pipenv to system PATH permanently...
-setx PATH "%PATH%;%SCRIPTS_PATH%" >nul 2>&1
+echo Detected Python Scripts path: %SCRIPTS_PATH%
+echo.
 
-REM Also add to current session PATH
-set PATH=%PATH%;%SCRIPTS_PATH%
+REM Add to current session PATH first
+set PATH=%SCRIPTS_PATH%;%PATH%
 set PATH=%APPDATA%\Python\Scripts;%PATH%
 set PATH=%USERPROFILE%\AppData\Roaming\Python\Python312\Scripts;%PATH%
+set PATH=%USERPROFILE%\AppData\Roaming\Python\Python313\Scripts;%PATH%
+set PATH=%USERPROFILE%\AppData\Roaming\Python\Python314\Scripts;%PATH%
 set PATH=%USERPROFILE%\AppData\Roaming\Python\Python311\Scripts;%PATH%
 set PATH=%USERPROFILE%\AppData\Roaming\Python\Python310\Scripts;%PATH%
 
-REM Verify pipenv is accessible
+REM Verify pipenv is accessible in current session
 pipenv --version >nul 2>&1
 if %errorlevel% equ 0 (
-    echo [OK] pipenv installed successfully and added to PATH!
-    echo [OK] You may need to restart Command Prompt for PATH changes to take effect
+    echo [OK] pipenv is accessible in current session
 ) else (
-    echo [!] pipenv installed but may need manual PATH configuration
-    echo [!] Continuing with installation...
+    echo [!] Warning: pipenv not accessible yet
 )
+
+REM Add pipenv to PATH permanently for the current user
+echo Adding pipenv to system PATH permanently...
+echo.
+
+REM Get current user PATH
+for /f "tokens=2*" %%a in ('reg query "HKCU\Environment" /v PATH 2^>nul') do set CURRENT_USER_PATH=%%b
+
+REM Check if Scripts path is already in PATH
+echo %CURRENT_USER_PATH% | find /i "%SCRIPTS_PATH%" >nul
+if %errorlevel% neq 0 (
+    REM Not in PATH, add it
+    if defined CURRENT_USER_PATH (
+        setx PATH "%CURRENT_USER_PATH%;%SCRIPTS_PATH%" >nul 2>&1
+    ) else (
+        setx PATH "%SCRIPTS_PATH%" >nul 2>&1
+    )
+
+    if %errorlevel% equ 0 (
+        echo [OK] Added pipenv to system PATH permanently
+        echo [OK] Restart Command Prompt for changes to take effect everywhere
+    ) else (
+        echo [!] Could not update PATH automatically
+        echo [!] You may need to add this manually: %SCRIPTS_PATH%
+    )
+) else (
+    echo [OK] pipenv Scripts path already in system PATH
+)
+
+echo.
+echo [OK] pipenv installation complete!
 
 :install_python_deps
 echo.
@@ -259,16 +288,39 @@ echo.
 echo This may take 3-5 minutes. Please wait...
 echo.
 
-REM Install Python dependencies using pipenv
+REM Try to install Python dependencies using pipenv with lock file
 pipenv install
 
-if %errorlevel% equ 0 (
-    echo [OK] Python dependencies installed successfully!
+if %errorlevel% neq 0 (
+    echo.
+    echo [!] Installation from lock file failed. Trying without lock file...
+    echo.
+
+    REM Delete the lock file and try again
+    if exist "Pipfile.lock" (
+        echo Removing Pipfile.lock...
+        del /f "Pipfile.lock"
+    )
+
+    REM Install without lock file
+    pipenv install --skip-lock
+
+    if %errorlevel% equ 0 (
+        echo [OK] Python dependencies installed successfully!
+    ) else (
+        color 0C
+        echo [ERROR] Failed to install Python dependencies
+        echo.
+        echo Troubleshooting tips:
+        echo   1. Check your internet connection
+        echo   2. Try running: pipenv install --skip-lock
+        echo   3. Check if any antivirus is blocking the installation
+        echo.
+        pause
+        exit /b 1
+    )
 ) else (
-    color 0C
-    echo [ERROR] Failed to install Python dependencies
-    pause
-    exit /b 1
+    echo [OK] Python dependencies installed successfully!
 )
 
 echo.
@@ -285,17 +337,46 @@ if not exist "Frontend" (
 )
 
 cd Frontend
+
+REM Create lib/utils.ts if it doesn't exist (required for shadcn/ui components)
+if not exist "src\lib" mkdir "src\lib"
+if not exist "src\lib\utils.ts" (
+    echo Creating missing utils.ts file...
+    (
+        echo import { type ClassValue, clsx } from "clsx"
+        echo import { twMerge } from "tailwind-merge"
+        echo.
+        echo export function cn^(...inputs: ClassValue[]^) {
+        echo   return twMerge^(clsx^(inputs^)^)
+        echo }
+    ) > "src\lib\utils.ts"
+    echo [OK] Created src\lib\utils.ts
+)
+
 echo Installing Node.js packages (this may take a few minutes)...
 call npm install
 
 if %errorlevel% equ 0 (
     echo [OK] Frontend dependencies installed successfully!
 ) else (
-    color 0C
-    echo [ERROR] Failed to install Frontend dependencies
-    cd ..
-    pause
-    exit /b 1
+    echo [!] npm install encountered issues. Trying with --force flag...
+    call npm install --force
+
+    if %errorlevel% equ 0 (
+        echo [OK] Frontend dependencies installed successfully!
+    ) else (
+        color 0C
+        echo [ERROR] Failed to install Frontend dependencies
+        echo.
+        echo Troubleshooting tips:
+        echo   1. Check your internet connection
+        echo   2. Try running: npm cache clean --force
+        echo   3. Delete node_modules folder and try again
+        echo.
+        cd ..
+        pause
+        exit /b 1
+    )
 )
 
 cd ..
