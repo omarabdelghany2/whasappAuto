@@ -138,7 +138,10 @@ class MessageScheduler:
                 # Close browser only if no upcoming schedules
                 try:
                     if self.bot and self.bot.driver:
-                        if self._has_upcoming_schedules(within_minutes=10):
+                        # Check for upcoming schedules in the same batch first (within 2 minutes for batch jobs)
+                        if batch_id and self._has_upcoming_schedules(within_minutes=2, batch_id=batch_id):
+                            logger.info(f"Keeping browser open - more schedules in batch '{batch_id}' coming up soon")
+                        elif self._has_upcoming_schedules(within_minutes=10):
                             logger.info("Keeping browser open - more schedules coming up soon")
                         else:
                             logger.info("Closing browser after successful scheduled job...")
@@ -194,7 +197,10 @@ class MessageScheduler:
                 # Close browser only if no upcoming schedules
                 try:
                     if self.bot and self.bot.driver:
-                        if self._has_upcoming_schedules(within_minutes=10):
+                        # Check for upcoming schedules in the same batch first (within 2 minutes for batch jobs)
+                        if batch_id and self._has_upcoming_schedules(within_minutes=2, batch_id=batch_id):
+                            logger.info(f"Keeping browser open - more schedules in batch '{batch_id}' coming up soon")
+                        elif self._has_upcoming_schedules(within_minutes=10):
                             logger.info("Keeping browser open - more schedules coming up soon")
                         else:
                             logger.info("Closing browser after successful scheduled job...")
@@ -251,7 +257,10 @@ class MessageScheduler:
                 # Close browser only if no upcoming schedules
                 try:
                     if self.bot and self.bot.driver:
-                        if self._has_upcoming_schedules(within_minutes=10):
+                        # Check for upcoming schedules in the same batch first (within 2 minutes for batch jobs)
+                        if batch_id and self._has_upcoming_schedules(within_minutes=2, batch_id=batch_id):
+                            logger.info(f"Keeping browser open - more schedules in batch '{batch_id}' coming up soon")
+                        elif self._has_upcoming_schedules(within_minutes=10):
                             logger.info("Keeping browser open - more schedules coming up soon")
                         else:
                             logger.info("Closing browser after successful scheduled job...")
