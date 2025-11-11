@@ -492,5 +492,43 @@
     "batch_id": "batch_1762851860812",
     "completed_at": "2025-11-11 11:07:16",
     "time": "2025-11-11 11:06"
+  },
+  {
+    "type": "poll",
+    "group_name": "Omar abdelghany",
+    "question": "ما شاء الله احسنت 💪👏",
+    "options": [
+      "ما شاء الله احسنت 💪👏",
+      "ما شاء الله احسنت 💪👏",
+      "ما شاء الله احسنت 💪👏"
+    ],
+    "allow_multiple": false,
+    "scheduled_time": "2025-11-11 11:21",
+    "repeat": "once",
+    "created_at": "2025-11-11 11:21:22",
+    "status": "done",
+    "profile_name": null,
+    "batch_id": null,
+    "completed_at": "2025-11-11 11:22:44",
+    "time": "2025-11-11 11:21"
+  },
+  {
+    "type": "poll",
+    "group_name": "Omar abdelghany",
+    "question": "ما شاء الله احسنت 💪👏",
+    "options": [
+      "ما شاء الله احسنت 💪",
+      "ما شاء الله احسنت 👏",
+      "ما شاء الله احسنت 💪👏gg"
+    ],
+    "allow_multiple": false,
+    "scheduled_time": "2025-11-11 12:41",
+    "repeat": "once",
+    "created_at": "2025-11-11 12:41:24",
+    "status": "done",
+    "profile_name": null,
+    "batch_id": null,
+    "completed_at": "2025-11-11 12:43:06",
+    "time": "2025-11-11 12:41"
   }
 ]
