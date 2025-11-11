@@ -1056,7 +1056,13 @@ class WhatsAppBot:
                     )
                     question_box.click()
                     time.sleep(0.3)  # Reduced from 0.5s
-                    question_box.send_keys(question)
+
+                    # Use clipboard paste for emoji support (same as text messages)
+                    pyperclip.copy(question)
+                    time.sleep(0.1)
+                    question_box.send_keys(Keys.CONTROL, 'v')
+                    time.sleep(0.3)
+
                     logger.info(f"Question entered: {question}")
                     question_entered = True
                     time.sleep(0.3)  # Reduced from 1s
@@ -1099,7 +1105,13 @@ class WhatsAppBot:
                         if i < len(option_boxes):
                             option_boxes[i].click()
                             time.sleep(0.3)
-                            option_boxes[i].send_keys(option)
+
+                            # Use clipboard paste for emoji support (same as text messages)
+                            pyperclip.copy(option)
+                            time.sleep(0.1)
+                            option_boxes[i].send_keys(Keys.CONTROL, 'v')
+                            time.sleep(0.2)
+
                             logger.info(f"[OK] Option {i+1} entered successfully (method 1)")
                             option_entered = True
                             time.sleep(0.3)
@@ -1115,7 +1127,13 @@ class WhatsAppBot:
                         if i + 1 < len(all_textboxes):
                             all_textboxes[i + 1].click()
                             time.sleep(0.3)
-                            all_textboxes[i + 1].send_keys(option)
+
+                            # Use clipboard paste for emoji support (same as text messages)
+                            pyperclip.copy(option)
+                            time.sleep(0.1)
+                            all_textboxes[i + 1].send_keys(Keys.CONTROL, 'v')
+                            time.sleep(0.2)
+
                             logger.info(f"[OK] Option {i+1} entered successfully (method 2)")
                             option_entered = True
                             time.sleep(0.3)
@@ -1131,7 +1149,13 @@ class WhatsAppBot:
                         if i + 1 < len(copyable_fields):
                             copyable_fields[i + 1].click()
                             time.sleep(0.3)
-                            copyable_fields[i + 1].send_keys(option)
+
+                            # Use clipboard paste for emoji support (same as text messages)
+                            pyperclip.copy(option)
+                            time.sleep(0.1)
+                            copyable_fields[i + 1].send_keys(Keys.CONTROL, 'v')
+                            time.sleep(0.2)
+
                             logger.info(f"[OK] Option {i+1} entered successfully (method 3)")
                             option_entered = True
                             time.sleep(0.3)
