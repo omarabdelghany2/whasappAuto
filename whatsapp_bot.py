@@ -327,6 +327,12 @@ class WhatsAppBot:
 
         self.driver.maximize_window()
 
+        # Bring window to foreground using JavaScript
+        try:
+            self.driver.execute_script("window.focus();")
+        except:
+            pass
+
         # Open WhatsApp Web
         logger.info("Opening WhatsApp Web...")
         self.driver.get("https://web.whatsapp.com")
@@ -1263,6 +1269,14 @@ class WhatsAppBot:
             group_name (str): Name of the group
             message (str): Message to send
         """
+        # Bring browser window to foreground
+        try:
+            self.driver.maximize_window()
+            self.driver.switch_to.window(self.driver.current_window_handle)
+            self.driver.execute_script("window.focus();")
+        except:
+            pass
+
         group_name = group_name.strip()
         logger.info(f"Sending message to group '{group_name}'")
 
@@ -1281,6 +1295,14 @@ class WhatsAppBot:
             image_path (str): Path to the image file
             caption (str): Optional caption for the image
         """
+        # Bring browser window to foreground
+        try:
+            self.driver.maximize_window()
+            self.driver.switch_to.window(self.driver.current_window_handle)
+            self.driver.execute_script("window.focus();")
+        except:
+            pass
+
         group_name = group_name.strip()
         logger.info(f"Sending image to group '{group_name}'")
 
@@ -1299,6 +1321,14 @@ class WhatsAppBot:
             video_path (str): Path to the video file
             caption (str): Optional caption for the video
         """
+        # Bring browser window to foreground
+        try:
+            self.driver.maximize_window()
+            self.driver.switch_to.window(self.driver.current_window_handle)
+            self.driver.execute_script("window.focus();")
+        except:
+            pass
+
         group_name = group_name.strip()
         logger.info(f"Sending video to group '{group_name}'")
 
